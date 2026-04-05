@@ -2,3 +2,6 @@ build/
 core/include/build/
 core/src/build/
 scripts/
+create-script.ps1
+main.exe
+main.cpp
