@@ -1,0 +1,4 @@
+build/
+core/include/build/
+core/src/build/
+scripts/
