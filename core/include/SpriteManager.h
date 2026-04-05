@@ -20,8 +20,6 @@ private:
     void RegisterSprite(SpriteRenderer *sprite);
     void UnregisterSprite(SpriteRenderer *sprite);
     void SortSpritesByLayer();
-
-
 };
 
 

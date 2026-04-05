@@ -37,9 +37,15 @@ void SpriteManager::SortSpritesByLayer()
 void SpriteManager::RenderAllSprites(SDL_Renderer* renderer)
 {
     if(isYSortEnabled) {
-        std::sort(sprites.begin(), sprites.end(), [](SpriteRenderer* a, SpriteRenderer* b) {
-            return a->GetTransform()->position.y < b->GetTransform()->position.y;
-        });
+        std::stable_sort(sprites.begin(), sprites.end(), [this](SpriteRenderer* a, SpriteRenderer* b) {
+        if (a->layerOrder != b->layerOrder) {
+            return a->layerOrder < b->layerOrder; // Sort by Layer first
+        }
+        if (isYSortEnabled) {
+            return a->GetTransform()->position.y < b->GetTransform()->position.y; // Sort by Y if same layer
+        }
+        return false; 
+    });
     }
     for (auto& sprite : sprites){
         if(sprite->GetTransform() == nullptr || sprite->texture == nullptr) continue; // Skip if no transform or texture
@@ -47,8 +53,8 @@ void SpriteManager::RenderAllSprites(SDL_Renderer* renderer)
         SDL_FRect rect;
         rect.x = sprite->GetTransform()->position.x;
         rect.y = sprite->GetTransform()->position.y;
-        rect.w = (sprite->GetWidth() / Setting::BASE_UNIT) * sprite->GetTransform()->scale.x;
-        rect.h = (sprite->GetHeight() / Setting::BASE_UNIT) * sprite->GetTransform()->scale.y;
+        rect.w = (sprite->GetWidth()) * sprite->GetTransform()->scale.x;
+        rect.h = (sprite->GetHeight()) * sprite->GetTransform()->scale.y;
 
         SDL_FPoint pivot;
         pivot.x = rect.w / 2;

@@ -90,6 +90,12 @@ SDL_FRect RectTransform::CalculateRect(float parentWidth, float parentHeight){
     rect.x = pivotUiPosX - size.x * pivot.x;
     rect.y = pivotUiPosY - size.y * pivot.y;
 
+    size.x *= scale.x;
+    size.y *= scale.y;
+
+    rect.w = size.x;
+    rect.h = size.y;
+
     position.x = rect.x;
     position.y = rect.y;
 
@@ -113,7 +119,7 @@ void RectTransform::SetPosition(float x, float y){
 SpriteRenderer::SpriteRenderer(Transform *trans) : texture(nullptr), transform(trans)
 {
     layerOrder = 0;
-    LoadTexture(Core::renderer, "assets/sprites/defaultSquare.png");
+    LoadTexture(Core::renderer, "core/assets/sprites/defaultSquare.png");
     SpriteManager::OnSpriteRegister(this);
 }
 SpriteRenderer::~SpriteRenderer()

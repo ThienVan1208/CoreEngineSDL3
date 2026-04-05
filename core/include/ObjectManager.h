@@ -52,6 +52,13 @@ public:
     GameObject(SDL_FRect initRect);
 
     GameObject(float x, float y, float width, float height, SpriteRenderer* sprite);
+
+    ~GameObject() override = default;
+
+    virtual void OnEnable() override{}
+    virtual void OnDisable()override{}
+    virtual void OnStart()override{}
+    virtual void OnUpdate()override{}
 };
 
 #endif // OBJECTMANAGER_H

@@ -45,7 +45,9 @@ class UIText : public UIElement
 public:
     std::string text;
     SDL_Color color;
+
     UIText();
+    UIText(std::string txt);
 
     UIText(float x, float y, float width, float height, SDL_Color initColor, std::string txt);
 
@@ -75,14 +77,9 @@ private:
 
 public:
     UIText* text;
-    SDL_Color color;
+    Image* image;
     UIButton();
-    UIButton(float x, float y, float width, float height);
-    UIButton(float x, float y, float width, float height, SDL_Color initColor, std::string txt);
-
-    UIButton(float x, float y, float width, float height, uint8_t colorArray[4], std::string txt);
-
-    UIButton(float x, float y, float width, float height, std::string txt);
+    UIButton(float x, float y, float width, float height, std::string txt); // <-- Add this!
 
     ~UIButton() override = default;
 
