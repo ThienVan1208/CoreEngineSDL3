@@ -1,0 +1,34 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build SDL3 Project",
+            "type": "shell",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-g",
+                "main.cpp",
+                "core/src/*.cpp",
+                "core/src/components/*.cpp",
+                "scripts/src/*.cpp",
+                "-o",
+                "main.exe",
+                "-I",
+                "C:/msys64/ucrt64/include",
+                "-I",
+                "core/include",
+                "-I",
+                "scripts/include",
+                "-L",
+                "C:/msys64/ucrt64/lib",
+                "-lSDL3",
+                "-lSDL3_image"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}
