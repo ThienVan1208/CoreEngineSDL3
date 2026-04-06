@@ -10,6 +10,7 @@
                 "main.cpp",
                 "core/src/*.cpp",
                 "core/src/components/*.cpp",
+                "core/debug/*.cpp",
                 "scripts/src/*.cpp",
                 "-o",
                 "main.exe",

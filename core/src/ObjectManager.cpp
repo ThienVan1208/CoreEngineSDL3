@@ -1,5 +1,6 @@
 #include "../include/ObjectManager.h"
 #include "../include/components/Component.h"
+#include "../include/ZanBehavior.h"
 #include <algorithm>
 
 /*
@@ -46,7 +47,21 @@ void ObjectManager::UpdateObjects()
     for (auto &object : objects)
     {
         if (object->IsActive())
-            object->OnUpdate();
+        {
+            // Call lifecycle methods for all behaviors attached to this object
+            for (auto behavior : object->GetBehaviors())
+            {
+                // Call OnStart once per behavior
+                if (!behavior->HasStarted())
+                {
+                    behavior->OnStart();
+                    behavior->SetStarted(true);
+                }
+                
+                // Call OnUpdate every frame
+                behavior->OnUpdate();
+            }
+        }
     }
 }
 
@@ -89,6 +104,21 @@ void Object::SetActive(bool active)
         OnEnable();
     else
         OnDisable();
+}
+
+void Object::AttachBehavior(ZanBehavior* behavior)
+{
+    if (!behavior) return;
+    behavior->SetGameObject(this);
+    behavior->OnAwake();
+    behaviors.push_back(behavior);
+}
+
+void Object::DetachBehavior(ZanBehavior* behavior)
+{
+    if (!behavior) return;
+    behavior->OnDestroy();
+    behaviors.erase(std::remove(behaviors.begin(), behaviors.end(), behavior), behaviors.end());
 }
 
 /*

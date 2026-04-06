@@ -7,13 +7,17 @@
     TRANSFORM
 */
 Transform::Transform() : position{0, 0}, scale{1, 1}, rotation{0} {}
+
 void Transform::Translate(float deltaX, float deltaY)
 {
+    // Movement in Zan coordinates (Y-up)
     position.x += deltaX;
     position.y += deltaY;
 }
+
 void Transform::SetPosition(float x, float y)
 {
+    // Set position in Zan coordinates
     position.x = x;
     position.y = y;
 }
@@ -44,12 +48,21 @@ void Transform::SetScale(float x, float y)
     scale.y = y;
 }
 
+Vector2 Transform::GetSDLPosition(Vector2 size){
+    // First convert Zan center position to SDL center position
+    float sdlCenterX = CoordinateConverter::ZanToSDL_X(position.x);
+    float sdlCenterY = CoordinateConverter::ZanToSDL_Y(position.y);
+    
+    // Then convert from center to top-left corner
+    return Vector2(sdlCenterX - size.x / 2.0f, sdlCenterY - size.y / 2.0f);
+}
 
 /*
     RECT
 */
 
-RectTransform::RectTransform(Vector2 initSize) : Transform(){
+RectTransform::RectTransform(Vector2 initSize) : Transform()
+{
     pivot = Vector2(0.5f, 0.5f);
     anchorMin = Vector2(0.5f, 0.5f);
     anchorMax = Vector2(0.5f, 0.5f);
@@ -57,7 +70,8 @@ RectTransform::RectTransform(Vector2 initSize) : Transform(){
     size = initSize;
 }
 
-RectTransform::RectTransform(float sizeX, float sizeY) : Transform(){
+RectTransform::RectTransform(float sizeX, float sizeY) : Transform()
+{
     pivot = Vector2(0.5f, 0.5f);
     anchorMin = Vector2(0.5f, 0.5f);
     anchorMax = Vector2(0.5f, 0.5f);
@@ -66,16 +80,17 @@ RectTransform::RectTransform(float sizeX, float sizeY) : Transform(){
     size.y = sizeY;
 }
 
-RectTransform::RectTransform() : Transform(){
+RectTransform::RectTransform() : Transform()
+{
     pivot = Vector2(0.5f, 0.5f);
     anchorMin = Vector2(0.5f, 0.5f);
     anchorMax = Vector2(0.5f, 0.5f);
     anchoredPosition = Vector2(0.0f, 0.0f);
     size = Vector2(10.0f, 5.0f);
-
 }
 
-SDL_FRect RectTransform::CalculateRect(float parentWidth, float parentHeight){
+SDL_FRect RectTransform::CalculateRect(float parentWidth, float parentHeight)
+{
     SDL_FRect rect;
 
     float anchorBoxSizeW = parentWidth * (anchorMax.x - anchorMin.x);
@@ -100,15 +115,16 @@ SDL_FRect RectTransform::CalculateRect(float parentWidth, float parentHeight){
     position.y = rect.y;
 
     return rect;
-
 }
 
-void RectTransform::Translate(float deltaX, float deltaY) {
+void RectTransform::Translate(float deltaX, float deltaY)
+{
     anchoredPosition.x += deltaX;
     anchoredPosition.y += deltaY;
 }
 
-void RectTransform::SetPosition(float x, float y){
+void RectTransform::SetPosition(float x, float y)
+{
     anchoredPosition.x = x;
     anchoredPosition.y = y;
 }
@@ -142,4 +158,33 @@ void SpriteRenderer::LoadTexture(SDL_Renderer *initRenderer, const char *filePat
     {
         SDL_GetTextureSize(texture, &width, &height);
     }
+}
+
+/*
+    COLLIDER
+*/
+BoxCollider::BoxCollider(Transform *transform) : transform(transform)
+{
+    size = Vector2(50.0f, 50.0f);
+    offset = Vector2(0.0f, 0.0f);
+}
+
+bool BoxCollider::CheckCollision(Collider* collider){
+    Bound myBound = this->GetBound();
+    Bound anotherBound = collider->GetBound();
+    return !(myBound.right < anotherBound.left || 
+             myBound.left > anotherBound.right || 
+             myBound.top < anotherBound.bottom || 
+             myBound.bottom > anotherBound.top);
+
+}
+
+Bound BoxCollider::GetBound(){
+    Bound bound;
+    bound.left = transform->position.x + offset.x - size.x / 2.0f;
+    bound.right = bound.left + size.x ;
+    bound.top = transform->position.y + offset.y + size.y / 2.0f;
+    bound.bottom = bound.top - size.y;
+
+    return bound;
 }

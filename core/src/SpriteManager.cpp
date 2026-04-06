@@ -51,8 +51,10 @@ void SpriteManager::RenderAllSprites(SDL_Renderer* renderer)
         if(sprite->GetTransform() == nullptr || sprite->texture == nullptr) continue; // Skip if no transform or texture
 
         SDL_FRect rect;
-        rect.x = sprite->GetTransform()->position.x;
-        rect.y = sprite->GetTransform()->position.y;
+        Vector2 rectPos = sprite->GetTransform()->GetSDLPosition(Vector2(sprite->GetWidth(), sprite->GetHeight()));
+
+        rect.x = rectPos.x;
+        rect.y = rectPos.y;
         rect.w = (sprite->GetWidth()) * sprite->GetTransform()->scale.x;
         rect.h = (sprite->GetHeight()) * sprite->GetTransform()->scale.y;
 
