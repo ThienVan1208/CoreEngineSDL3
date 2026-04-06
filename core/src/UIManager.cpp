@@ -149,15 +149,12 @@ UIButton::UIButton(float x, float y, float width, float height, std::string txt)
     image = new Image();
     text = new UIText(txt);
 
-    // 1. Delete the default transforms
     delete image->rectTransform;
     delete text->rectTransform;
 
-    // 2. Share the Button's transform (which now has an actual width and height!)
     image->rectTransform = this->rectTransform;
     text->rectTransform = this->rectTransform;
 
-    // 3. Unregister from the global manager
     UIManager::OnUIUnregister(image);
     UIManager::OnUIUnregister(text);
 }

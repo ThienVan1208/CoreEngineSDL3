@@ -29,11 +29,11 @@ float CoordinateConverter::SDLToZan_Y(float sdlY)
 // Rendering conversion: Zan center position -> SDL rect with top-left corner
 SDL_FRect CoordinateConverter::ZanCenterToSDLRect(float zanCenterX, float zanCenterY, float width, float height)
 {
-    // Step 1: Convert center position from Zan to SDL coordinate system
+    // Convert center position from Zan to SDL coordinate system
     float sdlCenterX = ZanToSDL_X(zanCenterX);
     float sdlCenterY = ZanToSDL_Y(zanCenterY);
     
-    // Step 2: Convert from center to top-left corner (for SDL rendering)
+    // Convert from center to top-left corner (for SDL rendering)
     SDL_FRect rect;
     rect.x = sdlCenterX - width / 2.0f;
     rect.y = sdlCenterY - height / 2.0f;

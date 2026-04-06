@@ -44,25 +44,11 @@ void ObjectManager::UnregisterObject(Object *object)
 
 void ObjectManager::UpdateObjects()
 {
-    for (auto &object : objects)
-    {
-        if (object->IsActive())
-        {
-            // Call lifecycle methods for all behaviors attached to this object
-            for (auto behavior : object->GetBehaviors())
-            {
-                // Call OnStart once per behavior
-                if (!behavior->HasStarted())
-                {
-                    behavior->OnStart();
-                    behavior->SetStarted(true);
-                }
-                
-                // Call OnUpdate every frame
-                behavior->OnUpdate();
-            }
-        }
-    }
+
+    // for (auto &object : objects)
+    // {
+
+    // }
 }
 
 /*
@@ -73,14 +59,16 @@ Object::Object()
     transform = new Transform();
     isActive = true;
     rect = {0, 0, 0, 0};
-    ObjectManager::OnObjectRegister(this);
+    if (ObjectManager::OnObjectRegister)
+        ObjectManager::OnObjectRegister(this);
 }
 Object::Object(float x, float y, float width, float height) : transform(new Transform())
 {
     transform->SetPosition(x, y);
     rect = {x, y, width, height};
     isActive = true;
-    ObjectManager::OnObjectRegister(this);
+    if (ObjectManager::OnObjectRegister)
+        ObjectManager::OnObjectRegister(this);
 }
 Object::Object(SDL_FRect initRect) : transform(new Transform())
 {
@@ -88,7 +76,8 @@ Object::Object(SDL_FRect initRect) : transform(new Transform())
     transform->SetPosition(initRect.x, initRect.y);
     rect = initRect;
     isActive = true;
-    ObjectManager::OnObjectRegister(this);
+    if (ObjectManager::OnObjectRegister)
+        ObjectManager::OnObjectRegister(this);
 }
 
 bool Object::IsActive() const
@@ -106,19 +95,26 @@ void Object::SetActive(bool active)
         OnDisable();
 }
 
-void Object::AttachBehavior(ZanBehavior* behavior)
+void Object::AttachComponent(Component* component)
 {
-    if (!behavior) return;
-    behavior->SetGameObject(this);
-    behavior->OnAwake();
-    behaviors.push_back(behavior);
+    if (!component) return;
+    
+    // Set gameObject reference for ZanBehavior components
+    ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(component);
+    if (behavior)
+    {
+        behavior->SetGameObject(this);
+    }
+    
+    component->OnAttached();
+    components.push_back(component);
 }
 
-void Object::DetachBehavior(ZanBehavior* behavior)
+void Object::DetachComponent(Component* component)
 {
-    if (!behavior) return;
-    behavior->OnDestroy();
-    behaviors.erase(std::remove(behaviors.begin(), behaviors.end(), behavior), behaviors.end());
+    if (!component) return;
+    component->OnDetached();
+    components.erase(std::remove(components.begin(), components.end(), component), components.end());
 }
 
 /*
