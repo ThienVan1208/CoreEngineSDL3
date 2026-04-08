@@ -31,7 +31,7 @@ private:
 public:
     RigidbodyType type;
 
-    RigidBody(Object* obj);
+    RigidBody(Object* obj, RigidbodyType type = RigidbodyType::Dynamic, float mass = 1.0f);
 
     void AddForce(Vector2 force);
     void AddVelocity(Vector2 deltaVel);

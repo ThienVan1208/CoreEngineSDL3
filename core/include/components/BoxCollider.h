@@ -19,5 +19,8 @@ public:
     bool CheckCollision(Collider *collider) override;
     CollisionInfo GetCollisionInfo(Collider *collider) override;  
     void Render(SDL_Renderer* renderer) override;
+    
+    void OnAttached() override;
+    void OnDetached() override;
 };
 #endif // BOXCOLLIDER_H

@@ -1,13 +1,43 @@
 #include "../../include/components/BoxCollider.h"
 #include "../../include/Coordinate.h"
+#include "../../include/Core.h"
+#include "../../include/ObjectManager.h"
+#include "../../include/components/SpriteRenderer.h"
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
 
 BoxCollider::BoxCollider(Object* obj, Transform *transform) : Collider(obj), transform(transform)
 {
-    size = Vector2(50.0f, 50.0f);
+    size = Vector2(50.0f, 50.0f); // Default value, will be updated in OnAttached
     offset = Vector2(0.0f, 0.0f);
+}
+
+void BoxCollider::OnAttached()
+{
+    // Auto-size based on SpriteRenderer if available
+    GameObject* go = dynamic_cast<GameObject*>(object);
+    if (go && go->spriteRenderer) {
+        size = Vector2(
+            go->spriteRenderer->GetWidth() * transform->scale.x, 
+            go->spriteRenderer->GetHeight() * transform->scale.y
+        );
+    } else {
+        size = Vector2(100.0f, 50.0f); // Sensible fallback
+    }
+
+    if (Core::physicsManager)
+    {
+        Core::physicsManager->RegisterCollider(this);
+    }
+}
+
+void BoxCollider::OnDetached()
+{
+    if (Core::physicsManager)
+    {
+        Core::physicsManager->UnregisterCollider(this);
+    }
 }
 
 bool BoxCollider::CheckCollision(Collider* collider){

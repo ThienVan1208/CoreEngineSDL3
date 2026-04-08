@@ -29,8 +29,7 @@ void RenderManager::UnregisterRenderable(IRenderable* renderable)
 
 void RenderManager::RenderAll(SDL_Renderer* renderer)
 {
-    // Sort all renderables. 
-    // Uses stable_sort since objects with the same layer/Y-sort might jitter otherwise.
+    
     std::stable_sort(renderables.begin(), renderables.end(), [this](IRenderable* a, IRenderable* b) {
         if (a->GetRenderLayer() != b->GetRenderLayer()) {
             return a->GetRenderLayer() < b->GetRenderLayer(); // Sort by Layer first
