@@ -28,6 +28,7 @@ public:
     Transform *GetTransform() const { return transform; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    void SetSize(float w, float h);
     ~SpriteRenderer() override;
 
     // IRenderable implementation

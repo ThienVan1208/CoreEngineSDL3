@@ -25,13 +25,15 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
 {
     if(transform == nullptr || texture == nullptr) return;
 
-    SDL_FRect rect;
-    Vector2 rectPos = transform->GetSDLPosition(Vector2(width, height));
+    float finalWidth = width * transform->scale.x;
+    float finalHeight = height * transform->scale.y;
+    Vector2 rectPos = transform->GetSDLPosition(Vector2(finalWidth, finalHeight));
 
+    SDL_FRect rect;
     rect.x = rectPos.x;
     rect.y = rectPos.y;
-    rect.w = width * transform->scale.x;
-    rect.h = height * transform->scale.y;
+    rect.w = finalWidth;
+    rect.h = finalHeight;
 
     SDL_FPoint pivot;
     pivot.x = rect.w / 2;
@@ -61,4 +63,10 @@ void SpriteRenderer::LoadTexture(SDL_Renderer *initRenderer, const char *filePat
     {
         SDL_GetTextureSize(texture, &width, &height);
     }
+}
+
+void SpriteRenderer::SetSize(float w, float h)
+{
+    width = w;
+    height = h;
 }

@@ -129,13 +129,16 @@ GameObject::GameObject() : Object()
 GameObject::GameObject(float x, float y, float width, float height) : Object(x, y, width, height)
 {
     spriteRenderer = new SpriteRenderer(transform);
+    spriteRenderer->SetSize(width, height);
 }
 GameObject::GameObject(SDL_FRect initRect) : Object(initRect)
 {
     spriteRenderer = new SpriteRenderer(transform);
+    spriteRenderer->SetSize(initRect.w, initRect.h);
 }
 
 GameObject::GameObject(float x, float y, float width, float height, SpriteRenderer *sprite) : Object(x, y, width, height)
 {
     spriteRenderer = sprite;
+    spriteRenderer->SetSize(width, height);
 }
