@@ -64,19 +64,10 @@ Object::Object()
     if (ObjectManager::OnObjectRegister)
         ObjectManager::OnObjectRegister(this);
 }
-Object::Object(float x, float y, float width, float height) : transform(new Transform())
+Object::Object(float x, float y) : transform(new Transform())
 {
     transform->SetPosition(x, y);
-    rect = {x, y, width, height};
-    isActive = true;
-    if (ObjectManager::OnObjectRegister)
-        ObjectManager::OnObjectRegister(this);
-}
-Object::Object(SDL_FRect initRect) : transform(new Transform())
-{
-    // Assuming SDL_FRect has x, y, w, h members
-    transform->SetPosition(initRect.x, initRect.y);
-    rect = initRect;
+    rect = {x, y, 0, 0}; // Width and height default to 0
     isActive = true;
     if (ObjectManager::OnObjectRegister)
         ObjectManager::OnObjectRegister(this);
@@ -126,19 +117,12 @@ GameObject::GameObject() : Object()
 {
     spriteRenderer = new SpriteRenderer(transform);
 }
-GameObject::GameObject(float x, float y, float width, float height) : Object(x, y, width, height)
+GameObject::GameObject(float x, float y) : Object(x, y)
 {
     spriteRenderer = new SpriteRenderer(transform);
-    spriteRenderer->SetSize(width, height);
-}
-GameObject::GameObject(SDL_FRect initRect) : Object(initRect)
-{
-    spriteRenderer = new SpriteRenderer(transform);
-    spriteRenderer->SetSize(initRect.w, initRect.h);
 }
 
-GameObject::GameObject(float x, float y, float width, float height, SpriteRenderer *sprite) : Object(x, y, width, height)
+GameObject::GameObject(float x, float y, SpriteRenderer *sprite) : Object(x, y)
 {
     spriteRenderer = sprite;
-    spriteRenderer->SetSize(width, height);
 }

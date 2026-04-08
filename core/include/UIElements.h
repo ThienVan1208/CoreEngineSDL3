@@ -21,7 +21,7 @@ public:
     bool isActive;
     
     UIElement();
-    UIElement(float x, float y, float width, float height);
+    UIElement(float x, float y);
 
     virtual ~UIElement();
 
@@ -39,9 +39,8 @@ public:
 
     UIText();
     UIText(std::string txt);
-    UIText(float x, float y, float width, float height, SDL_Color initColor, std::string txt);
-    UIText(float x, float y, float width, float height, uint8_t colorArray[4], std::string txt);
-    UIText(float x, float y, float width, float height, std::string txt);
+    UIText(float x, float y, SDL_Color initColor, std::string txt);
+    UIText(float x, float y, std::string txt);
 
     ~UIText() override = default;
 
@@ -55,7 +54,7 @@ public:
     
     Image();
     Image(const char* filePath);
-    Image(float x, float y, float width, float height);
+    Image(float x, float y);
     
     void Render(SDL_Renderer *renderer) override;
     void LoadTexture(SDL_Renderer *initRenderer, const char* filePath);
@@ -71,7 +70,7 @@ public:
     Image* image;
     
     UIButton();
-    UIButton(float x, float y, float width, float height, std::string txt);
+    UIButton(float x, float y, std::string txt);
 
     ~UIButton() override = default;
 

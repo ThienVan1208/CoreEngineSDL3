@@ -16,13 +16,11 @@ UIElement::UIElement()
     RenderManager::OnRegisterRenderable(this);
 }
 
-UIElement::UIElement(float x, float y, float width, float height)
+UIElement::UIElement(float x, float y)
 {
     rectTransform = new RectTransform();
 
     rectTransform->SetPosition(x, y);
-    rectTransform->size.x = width;
-    rectTransform->size.y = height;
 
     isActive = true;
     RenderManager::OnRegisterRenderable(this);
@@ -44,34 +42,27 @@ void UIElement::Render(SDL_Renderer *renderer)
             TEXT
 ***********************************/
 
-UIText::UIText() : UIElement(0, 0, 0, 0)
+UIText::UIText() : UIElement(0, 0)
 {
     text = "New Text";
     color = {0, 0, 0, 255}; // Default black color
 }
 
-UIText::UIText(std::string newText) : UIElement(0, 0, 0, 0)
+UIText::UIText(std::string newText) : UIElement(0, 0)
 {
     text = newText;
     color = {0, 0, 0, 255}; // Default black color
 }
 
-UIText::UIText(float x, float y, float width, float height, SDL_Color initColor, std::string txt)
-    : UIElement(x, y, width, height)
+UIText::UIText(float x, float y, SDL_Color initColor, std::string txt)
+    : UIElement(x, y)
 {
     this->text = txt;
     this->color = initColor;
 }
 
-UIText::UIText(float x, float y, float width, float height, uint8_t colorArray[4], std::string txt)
-    : UIElement(x, y, width, height)
-{
-    this->text = txt;
-    this->color = {colorArray[0], colorArray[1], colorArray[2], colorArray[3]};
-}
-
-UIText::UIText(float x, float y, float width, float height, std::string txt)
-    : UIElement(x, y, width, height)
+UIText::UIText(float x, float y, std::string txt)
+    : UIElement(x, y)
 {
     this->text = txt;
     this->color = {0, 0, 0, 255}; // Default black color
@@ -90,7 +81,7 @@ void UIText::Render(SDL_Renderer *renderer)
 /*
     IMAGE
 */
-Image::Image() : UIElement(0, 0, 0, 0)
+Image::Image() : UIElement(0, 0)
 {
     LoadTexture(Core::renderer, "core/assets/sprites/defaultSquare.png");
 }
@@ -131,7 +122,7 @@ void Image::Render(SDL_Renderer *renderer)
 /**********************************
             BUTTON
 ***********************************/
-UIButton::UIButton() : UIElement(0, 0, 0, 0)
+UIButton::UIButton() : UIElement(0, 0)
 {
     image = new Image();
     text = new UIText("New Button");
@@ -147,8 +138,8 @@ UIButton::UIButton() : UIElement(0, 0, 0, 0)
 }
 
 // The constructor that actually sets the size!
-UIButton::UIButton(float x, float y, float width, float height, std::string txt)
-    : UIElement(x, y, width, height) 
+UIButton::UIButton(float x, float y, std::string txt)
+    : UIElement(x, y) 
 {
     image = new Image();
     text = new UIText(txt);

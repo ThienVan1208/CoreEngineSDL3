@@ -38,8 +38,7 @@ private:
 public:
     Transform *transform;
     Object();
-    Object(float x, float y, float width, float height);
-    Object(SDL_FRect initRect);
+    Object(float x, float y);
     virtual ~Object() = default;
 
     virtual void OnEnable() {};
@@ -62,9 +61,8 @@ class GameObject : public Object
 public:
     SpriteRenderer *spriteRenderer;
     GameObject();
-    GameObject(float x, float y, float width, float height);
-    GameObject(SDL_FRect initRect);
-    GameObject(float x, float y, float width, float height, SpriteRenderer *sprite);
+    GameObject(float x, float y);
+    GameObject(float x, float y, SpriteRenderer *sprite);
 
     ~GameObject() override = default;
 };
