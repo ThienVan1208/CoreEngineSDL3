@@ -12,6 +12,8 @@
 // Forward declaration
 class Object;
 
+static constexpr float GRAVITY = -980.0f; // Units/s² (pixels, Y-up)
+
 enum RigidbodyType
 {
     Dynamic,
@@ -30,6 +32,8 @@ private:
 
 public:
     RigidbodyType type;
+    bool useGravity = true;
+    float gravityScale = 1.0f;
 
     RigidBody(Object* obj, RigidbodyType type = RigidbodyType::Dynamic, float mass = 1.0f);
 

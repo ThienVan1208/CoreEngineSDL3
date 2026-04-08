@@ -33,7 +33,13 @@ void RigidBody::SetVelocity(Vector2 newVel)
 
 void RigidBody::OnPhysicsUpdate(float deltaTime)
 {
-    if (type != RigidbodyType::Dynamic) return; 
+    if (type != RigidbodyType::Dynamic) return;
+
+    // Apply gravity
+    if (useGravity)
+    {
+        velocity.y += GRAVITY * gravityScale * deltaTime;
+    }
 
     object->transform->Translate(velocity.x * deltaTime, velocity.y * deltaTime);
 }
