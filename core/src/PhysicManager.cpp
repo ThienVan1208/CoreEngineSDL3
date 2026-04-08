@@ -1,6 +1,9 @@
 #include "../include/PhysicManager.h"
 #include "../include/ObjectManager.h"
 #include "../include/components/Component.h"
+#include "../include/components/Collider.h"
+#include "../include/components/RigidBody.h"
+#include "../include/components/Transform.h"
 #include "../include/ZanBehavior.h"
 #include <algorithm>
 
@@ -112,16 +115,41 @@ void Physic::CheckCollisions()
                     // Separate overlapping objects
                     float positionCorrectionMagnitude = penetration + 0.01f;  // 0.01f = small bias to prevent sticking
                     
-                    if (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic)
-                    {
-                        objectA->transform->Translate(-normal.x * positionCorrectionMagnitude / 2.0f, 
-                                                       -normal.y * positionCorrectionMagnitude / 2.0f);
-                    }
+                    SDL_Log("━━━ COLLISION RESPONSE ━━━");
+                    SDL_Log("Normal: (%.2f, %.2f) | Penetration: %.2f", normal.x, normal.y, penetration);
                     
-                    if (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic)
+                    float invMassA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyA->GetMass() : 0.0f;
+                    float invMassB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyB->GetMass() : 0.0f;
+                    float sumInvMass = invMassA + invMassB;
+                    
+                    if (sumInvMass > 0.0f)
                     {
-                        objectB->transform->Translate(normal.x * positionCorrectionMagnitude / 2.0f, 
-                                                       normal.y * positionCorrectionMagnitude / 2.0f);
+                        float pushRatioA = invMassA / sumInvMass;
+                        float pushRatioB = invMassB / sumInvMass;
+                        
+                        if (invMassA > 0.0f)
+                        {
+                            float pushX = -normal.x * positionCorrectionMagnitude * pushRatioA;
+                            float pushY = -normal.y * positionCorrectionMagnitude * pushRatioA;
+                            objectA->transform->Translate(pushX, pushY);
+                            SDL_Log("Object A pushed by: (%.2f, %.2f)", pushX, pushY);
+                        }
+                        else if (rigidBodyA)
+                        {
+                            SDL_Log("Object A: Static (not moved)");
+                        }
+                        
+                        if (invMassB > 0.0f)
+                        {
+                            float pushX = normal.x * positionCorrectionMagnitude * pushRatioB;
+                            float pushY = normal.y * positionCorrectionMagnitude * pushRatioB;
+                            objectB->transform->Translate(pushX, pushY);
+                            SDL_Log("Object B pushed by: (%.2f, %.2f)", pushX, pushY);
+                        }
+                        else if (rigidBodyB)
+                        {
+                            SDL_Log("Object B: Static (not moved)");
+                        }
                     }
                     
                     // Calculate impulse magnitude
@@ -138,8 +166,8 @@ void Physic::CheckCollisions()
                     // Only resolve if objects are moving toward each other
                     if (velAlongNormal < 0)
                     {
-                        float massA = rigidBodyA ? rigidBodyA->GetMass() : 999999.0f;  // Large mass for static
-                        float massB = rigidBodyB ? rigidBodyB->GetMass() : 999999.0f;
+                        float massA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? rigidBodyA->GetMass() : 999999.0f;  // Large mass for static
+                        float massB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? rigidBodyB->GetMass() : 999999.0f;
                         
                         float impulseScalar = -(1 + restitution) * velAlongNormal / (1.0f / massA + 1.0f / massB);
                         

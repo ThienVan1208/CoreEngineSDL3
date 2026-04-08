@@ -1,8 +1,7 @@
 #include "../include/Core.h"
-#include "../include/UiManager.h"
+#include "../include/RenderManager.h"
 #include "../include/ObjectManager.h"
 #include "../include/BehaviorManager.h"
-#include "../include/SpriteManager.h"
 #include "../include/Input.h"
 #include "../include/PhysicManager.h"
 
@@ -11,42 +10,37 @@ Physic *Core::physicsManager = nullptr;
 
 Core::Core()
 {
-    uiManager = new UIManager();
+    renderManager = new RenderManager();
     objectManager = new ObjectManager();
     behaviorManager = new BehaviorManager();
-    spriteManager = new SpriteManager();
     input = new Input();
     physicsManager = new Physic();
 
-    uiManager->Init();
+    renderManager->Init();
     objectManager->Init();
     behaviorManager->Init();
-    spriteManager->Init();
     input->Init();
 }
 Core::Core(SDL_Renderer *rend)
 {
     renderer = rend;
-    uiManager = new UIManager();
+    renderManager = new RenderManager();
     objectManager = new ObjectManager();
     behaviorManager = new BehaviorManager();
-    spriteManager = new SpriteManager();
     input = new Input();
     physicsManager = new Physic();
 
-    uiManager->Init();
+    renderManager->Init();
     objectManager->Init();
     behaviorManager->Init();
-    spriteManager->Init();
     input->Init();
 }
 
 Core::~Core()
 {
-    delete uiManager;
+    delete renderManager;
     delete objectManager;
     delete behaviorManager;
-    delete spriteManager;
     delete input;
     delete physicsManager;
 }
@@ -63,6 +57,5 @@ void Core::OnUpdate()
 }
 void Core::OnRender()
 {
-    spriteManager->RenderAllSprites(renderer);
-    uiManager->RenderElements(renderer);
+    renderManager->RenderAll(renderer);
 }

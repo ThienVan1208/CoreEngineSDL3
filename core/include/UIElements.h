@@ -1,43 +1,34 @@
 #pragma once
 
-#ifndef UIMANAGER_H
-#define UIMANAGER_H
+#ifndef UIELEMENTS_H
+#define UIELEMENTS_H
 
 #include <SDL3/SDL.h>
 #include <string>
 #include <vector>
 #include <functional>
 #include <algorithm>
-#include "./components/Component.h"
-#include "./setting/Setting.h"
-class UIElement;
+#include "components/Component.h"
+#include "components/IRenderable.h"
+#include "components/RectTransform.h"
+#include "setting/Setting.h"
 
-class UIManager
-{
-public:
-    static std::function<void(UIElement *)> OnUIRegister;
-    static std::function<void(UIElement*)> OnUIUnregister;
-    void Init();
-    void RenderElements(SDL_Renderer *renderer);
-    ~UIManager();
-
-private:
-    std::vector<UIElement *> elements;
-    void RegisterElement(UIElement *element);
-    void UnregisterElement(UIElement *element);
-};
-
-class UIElement
+class UIElement : public IRenderable
 {
 public:
     int orderLayer;
     RectTransform* rectTransform;
     bool isActive;
+    
     UIElement();
     UIElement(float x, float y, float width, float height);
 
-    virtual ~UIElement() = default;
-    virtual void Render(SDL_Renderer *renderer);
+    virtual ~UIElement();
+
+    // IRenderable overrides
+    int GetRenderLayer() const override { return 1000 + orderLayer; } // UI renders at 1000+
+    bool IsVisible() const override { return isActive; }
+    virtual void Render(SDL_Renderer *renderer) override;
 };
 
 class UIText : public UIElement
@@ -48,28 +39,28 @@ public:
 
     UIText();
     UIText(std::string txt);
-
     UIText(float x, float y, float width, float height, SDL_Color initColor, std::string txt);
-
     UIText(float x, float y, float width, float height, uint8_t colorArray[4], std::string txt);
-
     UIText(float x, float y, float width, float height, std::string txt);
-        
 
     ~UIText() override = default;
 
     void Render(SDL_Renderer *renderer) override;
 };
+
 class Image : public UIElement{
 public:
     SDL_Texture* texture;
     SDL_Color color;
+    
     Image();
     Image(const char* filePath);
     Image(float x, float y, float width, float height);
+    
     void Render(SDL_Renderer *renderer) override;
     void LoadTexture(SDL_Renderer *initRenderer, const char* filePath);
 };
+
 class UIButton : public UIElement
 {
 private:
@@ -78,19 +69,17 @@ private:
 public:
     UIText* text;
     Image* image;
+    
     UIButton();
-    UIButton(float x, float y, float width, float height, std::string txt); // <-- Add this!
+    UIButton(float x, float y, float width, float height, std::string txt);
 
     ~UIButton() override = default;
 
     void AddListener(std::function<void()>& callback);
-
     void RemoveListener(std::function<void()>& callback);
- 
     void RemoveAllListeners();
-
 
     void Render(SDL_Renderer *renderer) override;
 };
 
-#endif // UIMANAGER_H
+#endif // UIELEMENTS_H

@@ -1,10 +1,8 @@
-#include "../include/UiManager.h"
+#include "../include/UIElements.h"
 #include <SDL3_image/SDL_image.h>
 #include "../include/Core.h"
 #include "../include/Screen.h"
-
-std::function<void(UIElement *)> UIManager::OnUIRegister;
-std::function<void(UIElement *)> UIManager::OnUIUnregister;
+#include "../include/RenderManager.h"
 
 /*
     UI Element
@@ -15,7 +13,7 @@ UIElement::UIElement()
     rectTransform = new RectTransform();
     orderLayer = 0;
     isActive = true;
-    UIManager::OnUIRegister(this);
+    RenderManager::OnRegisterRenderable(this);
 }
 
 UIElement::UIElement(float x, float y, float width, float height)
@@ -27,13 +25,20 @@ UIElement::UIElement(float x, float y, float width, float height)
     rectTransform->size.y = height;
 
     isActive = true;
-    UIManager::OnUIRegister(this);
+    RenderManager::OnRegisterRenderable(this);
 }
+
+UIElement::~UIElement()
+{
+    RenderManager::OnUnregisterRenderable(this);
+    delete rectTransform;
+}
+
 void UIElement::Render(SDL_Renderer *renderer)
 {
     if (!isActive || renderer == nullptr)
         return;
-};
+}
 
 /**********************************
             TEXT
@@ -75,8 +80,7 @@ UIText::UIText(float x, float y, float width, float height, std::string txt)
 void UIText::Render(SDL_Renderer *renderer)
 {
     UIElement::Render(renderer); // Call base render (if needed)
-    // Placeholder for text rendering logic
-    // In a real implementation, you would use SDL_ttf or a similar library to render the text
+    
     SDL_FRect rect = rectTransform->CalculateRect(Screen::GetWidth(), Screen::GetHeight());
 
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -122,7 +126,6 @@ void Image::Render(SDL_Renderer *renderer)
         &pivot,                  // Rotate around the center
         SDL_FLIP_NONE            // No flipping
     );
-
 }
 
 /**********************************
@@ -139,9 +142,10 @@ UIButton::UIButton() : UIElement(0, 0, 0, 0)
     text->rectTransform = this->rectTransform;
     image->rectTransform = this->rectTransform;
 
-    UIManager::OnUIUnregister(image);
-    UIManager::OnUIUnregister(text);
+    RenderManager::OnUnregisterRenderable(image);
+    RenderManager::OnUnregisterRenderable(text);
 }
+
 // The constructor that actually sets the size!
 UIButton::UIButton(float x, float y, float width, float height, std::string txt)
     : UIElement(x, y, width, height) 
@@ -155,18 +159,18 @@ UIButton::UIButton(float x, float y, float width, float height, std::string txt)
     image->rectTransform = this->rectTransform;
     text->rectTransform = this->rectTransform;
 
-    UIManager::OnUIUnregister(image);
-    UIManager::OnUIUnregister(text);
+    RenderManager::OnUnregisterRenderable(image);
+    RenderManager::OnUnregisterRenderable(text);
 }
+
 void UIButton::Render(SDL_Renderer *renderer)
 {
     UIElement::Render(renderer); // Call base render (if needed)
-    // Render button background
 
-    // Render button text
     image->Render(renderer);
     text->Render(renderer);
 }
+
 void UIButton::AddListener(std::function<void()> &callback)
 {
     onClick.push_back(&callback);
@@ -178,40 +182,4 @@ void UIButton::RemoveListener(std::function<void()> &callback)
 void UIButton::RemoveAllListeners()
 {
     onClick.clear();
-}
-
-/**********************************
-            UIManager
-***********************************/
-UIManager::~UIManager()
-{
-    OnUIRegister = nullptr;
-    OnUIUnregister = nullptr;
-}
-void UIManager::Init()
-{
-    OnUIRegister = [this](UIElement *element)
-    {
-        RegisterElement(element);
-    };
-    OnUIUnregister = [this](UIElement *element)
-    {
-        UnregisterElement(element);
-    };
-}
-void UIManager::RegisterElement(UIElement *element)
-{
-    elements.push_back(element);
-}
-void UIManager::RenderElements(SDL_Renderer *renderer)
-{
-    for (auto &element : elements)
-    {
-        if (element->isActive)
-            element->Render(renderer);
-    }
-}
-void UIManager::UnregisterElement(UIElement *element)
-{
-    elements.erase(std::remove(elements.begin(), elements.end(), element), elements.end());
 }

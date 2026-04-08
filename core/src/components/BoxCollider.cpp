@@ -1,0 +1,166 @@
+#include "../../include/components/BoxCollider.h"
+#include "../../include/Coordinate.h"
+#include <cfloat>
+#include <cmath>
+#include <algorithm>
+
+BoxCollider::BoxCollider(Object* obj, Transform *transform) : Collider(obj), transform(transform)
+{
+    size = Vector2(50.0f, 50.0f);
+    offset = Vector2(0.0f, 0.0f);
+}
+
+bool BoxCollider::CheckCollision(Collider* collider){
+    Bound myBound = this->GetBound();
+    Bound anotherBound = collider->GetBound();
+    return !(myBound.right < anotherBound.left || 
+             myBound.left > anotherBound.right || 
+             myBound.top < anotherBound.bottom || 
+             myBound.bottom > anotherBound.top);
+}
+
+CollisionInfo BoxCollider::GetCollisionInfo(Collider* collider)
+{
+    CollisionInfo info;
+    info.isColliding = false;
+    info.normal = Vector2(0, 0);
+    info.penetrationDepth = 0.0f;
+    
+    Bound myBound = this->GetBound();
+    Bound otherBound = collider->GetBound();
+    
+    if (myBound.right < otherBound.left || 
+        myBound.left > otherBound.right || 
+        myBound.top < otherBound.bottom || 
+        myBound.bottom > otherBound.top)
+    {
+        return info;
+    }
+    
+    info.isColliding = true;
+    
+    float overlapLeft = myBound.right - otherBound.left;
+    float overlapRight = otherBound.right - myBound.left;
+    float overlapTop = myBound.top - otherBound.bottom;
+    float overlapBottom = otherBound.top - myBound.bottom;
+    
+    float maxPenetration = std::max(size.x, size.y) * 1.5f;  // Clamp penetration
+    
+    float minHorizontal = FLT_MAX;
+    Vector2 horizontalNormal(0, 0);
+    
+    if (overlapLeft > 0 && overlapLeft < minHorizontal) {
+        minHorizontal = overlapLeft;
+        horizontalNormal = Vector2(1, 0); 
+    }
+    if (overlapRight > 0 && overlapRight < minHorizontal) {
+        minHorizontal = overlapRight;
+        horizontalNormal = Vector2(-1, 0);
+    }
+    
+    float minVertical = FLT_MAX;
+    Vector2 verticalNormal(0, 0);
+    
+    if (overlapTop > 0 && overlapTop < minVertical) {
+        minVertical = overlapTop;
+        verticalNormal = Vector2(0, 1);
+    }
+    if (overlapBottom > 0 && overlapBottom < minVertical) {
+        minVertical = overlapBottom;
+        verticalNormal = Vector2(0, -1);
+    }
+    
+    float penetrationRatio = 2.0f;
+    
+    bool preferHorizontal = false;
+    bool preferVertical = false;
+    
+    if (minHorizontal < FLT_MAX && minVertical < FLT_MAX)
+    {
+        if (minHorizontal <= minVertical / penetrationRatio)
+        {
+            preferHorizontal = true; 
+        }
+        else if (minVertical <= minHorizontal / penetrationRatio)
+        {
+            preferVertical = true;
+        }
+        else
+        {
+            float threshold = 8.0f;
+            if (std::abs(minHorizontal - minVertical) <= threshold)
+            {
+                info.normal = Vector2(horizontalNormal.x, verticalNormal.y);
+                info.penetrationDepth = std::min(std::max(minHorizontal, minVertical), maxPenetration);
+                
+                float length = std::sqrt(info.normal.x * info.normal.x + info.normal.y * info.normal.y);
+                if (length > 0)
+                {
+                    info.normal.x /= length;
+                    info.normal.y /= length;
+                }
+            }
+            else
+            {
+                if (minHorizontal < minVertical) {
+                    preferHorizontal = true;
+                } else {
+                    preferVertical = true;
+                }
+            }
+        }
+    }
+    else if (minHorizontal < FLT_MAX)
+    {
+        preferHorizontal = true;
+    }
+    else if (minVertical < FLT_MAX)
+    {
+        preferVertical = true;
+    }
+    
+    if (preferHorizontal)
+    {
+        info.penetrationDepth = std::min(minHorizontal, maxPenetration);
+        info.normal = horizontalNormal;
+    }
+    else if (preferVertical)
+    {
+        info.penetrationDepth = std::min(minVertical, maxPenetration);
+        info.normal = verticalNormal;
+    }
+    else
+    {
+        info.penetrationDepth = 0.1f;
+        info.normal = Vector2(0, 0);
+    }
+    
+    return info;
+}
+
+Bound BoxCollider::GetBound(){
+    Bound bound;
+    bound.left = transform->position.x + offset.x - size.x / 2.0f;
+    bound.right = bound.left + size.x ;
+    bound.top = transform->position.y + offset.y + size.y / 2.0f;
+    bound.bottom = bound.top - size.y;
+
+    return bound;
+}
+
+void BoxCollider::Render(SDL_Renderer* renderer)
+{
+    if (!isRenderVisible) return;
+    Bound b = GetBound();
+    Vector2 topLeftZan = { b.left, b.top };
+    Vector2 sdlTopLeft = CoordinateConverter::ZanToSDL(topLeftZan);
+    
+    SDL_FRect rect;
+    rect.x = sdlTopLeft.x;
+    rect.y = sdlTopLeft.y;
+    rect.w = b.right - b.left;
+    rect.h = b.top - b.bottom; // Zenith rect height
+    
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color for debug outlines
+    SDL_RenderRect(renderer, &rect);
+}

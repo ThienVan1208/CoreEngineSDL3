@@ -1,5 +1,7 @@
 #include "../include/ObjectManager.h"
 #include "../include/components/Component.h"
+#include "../include/components/Transform.h"
+#include "../include/components/SpriteRenderer.h"
 #include "../include/ZanBehavior.h"
 #include <algorithm>
 
