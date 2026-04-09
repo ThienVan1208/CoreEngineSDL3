@@ -12,7 +12,7 @@
 // Forward declaration
 class Object;
 
-static constexpr float GRAVITY = -980.0f; // Units/s² (pixels, Y-up)
+static constexpr float GRAVITY = -9.8f; // Units/s² (pixels, Y-up)
 
 enum RigidbodyType
 {

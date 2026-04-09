@@ -46,7 +46,6 @@ Core::~Core()
 }
 void Core::OnUpdate()
 {
-    input->Update();
     objectManager->UpdateObjects();
     behaviorManager->UpdateBehaviors();
     if (physicsManager)
@@ -54,6 +53,8 @@ void Core::OnUpdate()
         physicsManager->Update(1.0f / 60.0f); // 60 FPS physics update
         physicsManager->CheckCollisions();
     }
+
+    input->Update(); // Update previous state at the end of the frame
 }
 void Core::OnRender()
 {

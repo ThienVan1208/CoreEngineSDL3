@@ -18,6 +18,30 @@ void Physic::RegisterCollider(Collider *collider)
 void Physic::UnregisterCollider(Collider *collider)
 {
     colliders.erase(std::remove(colliders.begin(), colliders.end(), collider), colliders.end());
+    
+    // Remove any active collisions involving this collider
+    for (auto it = activeCollisions.begin(); it != activeCollisions.end(); )
+    {
+        if (it->first == collider || it->second == collider)
+        {
+            Collider* other = (it->first == collider) ? it->second : it->first;
+            
+            if (other && other->GetObject())
+            {
+                NotifyCollisionExit(other->GetObject(), collider);
+            }
+            if (collider->GetObject())
+            {
+                NotifyCollisionExit(collider->GetObject(), other);
+            }
+            
+            it = activeCollisions.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 void Physic::Update(float deltaTime)
@@ -51,7 +75,7 @@ void Physic::Update(float deltaTime)
     }
 }
 
-void Physic::NotifyCollisionEnter(Object* collidedObject, Object* otherObject)
+void Physic::NotifyCollisionEnter(Object* collidedObject, Collider* otherCollider)
 {
     if (!collidedObject)
         return;
@@ -61,13 +85,45 @@ void Physic::NotifyCollisionEnter(Object* collidedObject, Object* otherObject)
         ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
         if (behavior)
         {
-            behavior->OnCollisionEnter(otherObject);
+            behavior->OnCollisionEnter(otherCollider);
+        }
+    }
+}
+
+void Physic::NotifyCollisionStay(Object* collidedObject, Collider* otherCollider)
+{
+    if (!collidedObject)
+        return;
+    
+    for (auto& comp : collidedObject->GetComponents())
+    {
+        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
+        if (behavior)
+        {
+            behavior->OnCollisionStay(otherCollider);
+        }
+    }
+}
+
+void Physic::NotifyCollisionExit(Object* collidedObject, Collider* otherCollider)
+{
+    if (!collidedObject)
+        return;
+    
+    for (auto& comp : collidedObject->GetComponents())
+    {
+        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
+        if (behavior)
+        {
+            behavior->OnCollisionExit(otherCollider);
         }
     }
 }
 
 void Physic::CheckCollisions()
 {
+    std::set<std::pair<Collider*, Collider*>> newActiveCollisions;
+
     for (size_t i = 0; i < colliders.size(); i++)
     {
         for (size_t j = i + 1; j < colliders.size(); j++)
@@ -115,8 +171,8 @@ void Physic::CheckCollisions()
                     // Separate overlapping objects
                     float positionCorrectionMagnitude = penetration + 0.01f;  // 0.01f = small bias to prevent sticking
                     
-                    SDL_Log("━━━ COLLISION RESPONSE ━━━");
-                    SDL_Log("Normal: (%.2f, %.2f) | Penetration: %.2f", normal.x, normal.y, penetration);
+                    // SDL_Log("━━━ COLLISION RESPONSE ━━━");
+                    // SDL_Log("Normal: (%.2f, %.2f) | Penetration: %.2f", normal.x, normal.y, penetration);
                     
                     float invMassA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyA->GetMass() : 0.0f;
                     float invMassB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyB->GetMass() : 0.0f;
@@ -132,11 +188,11 @@ void Physic::CheckCollisions()
                             float pushX = -normal.x * positionCorrectionMagnitude * pushRatioA;
                             float pushY = -normal.y * positionCorrectionMagnitude * pushRatioA;
                             objectA->transform->Translate(pushX, pushY);
-                            SDL_Log("Object A pushed by: (%.2f, %.2f)", pushX, pushY);
+                            // SDL_Log("Object A pushed by: (%.2f, %.2f)", pushX, pushY);
                         }
                         else if (rigidBodyA)
                         {
-                            SDL_Log("Object A: Static (not moved)");
+                            // SDL_Log("Object A: Static (not moved)");
                         }
                         
                         if (invMassB > 0.0f)
@@ -144,11 +200,11 @@ void Physic::CheckCollisions()
                             float pushX = normal.x * positionCorrectionMagnitude * pushRatioB;
                             float pushY = normal.y * positionCorrectionMagnitude * pushRatioB;
                             objectB->transform->Translate(pushX, pushY);
-                            SDL_Log("Object B pushed by: (%.2f, %.2f)", pushX, pushY);
+                            // SDL_Log("Object B pushed by: (%.2f, %.2f)", pushX, pushY);
                         }
                         else if (rigidBodyB)
                         {
-                            SDL_Log("Object B: Static (not moved)");
+                            // SDL_Log("Object B: Static (not moved)");
                         }
                     }
                     
@@ -186,10 +242,48 @@ void Physic::CheckCollisions()
                     }
                 }
                 
-                // Notify both objects' behaviors (even without rigidbodies)
-                NotifyCollisionEnter(objectA, objectB);
-                NotifyCollisionEnter(objectB, objectA);
+                // Track active collisions properly
+                std::pair<Collider*, Collider*> collisionPair;
+                if (colliderA < colliderB)
+                    collisionPair = {colliderA, colliderB};
+                else
+                    collisionPair = {colliderB, colliderA};
+                
+                newActiveCollisions.insert(collisionPair);
+                
+                // Emitting Correct Callbacks
+                if (activeCollisions.find(collisionPair) == activeCollisions.end())
+                {
+                    // Newly began colliding
+                    NotifyCollisionEnter(objectA, colliderB);
+                    NotifyCollisionEnter(objectB, colliderA);
+                }
+                else
+                {
+                    // Continue colliding
+                    NotifyCollisionStay(objectA, colliderB);
+                    NotifyCollisionStay(objectB, colliderA);
+                }
             }
         }
     }
+    
+    // Find all past collisions that are no longer active to emit OnCollisionExit
+    for (const auto& pastCollision : activeCollisions)
+    {
+        if (newActiveCollisions.find(pastCollision) == newActiveCollisions.end())
+        {
+            Collider* colliderA = pastCollision.first;
+            Collider* colliderB = pastCollision.second;
+            
+            if (colliderA && colliderA->GetObject())
+                NotifyCollisionExit(colliderA->GetObject(), colliderB);
+            
+            if (colliderB && colliderB->GetObject())
+                NotifyCollisionExit(colliderB->GetObject(), colliderA);
+        }
+    }
+    
+    // Update active collisions for next frame
+    activeCollisions = newActiveCollisions;
 }

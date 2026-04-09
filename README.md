@@ -100,7 +100,7 @@ OnEnable()  →  called when behavior becomes enabled
 OnUpdate()  →  called every frame
 OnDisable() →  called when behavior is disabled
 OnDestroy() →  called on detach/destruction
-OnCollisionEnter(Object* other)  →  called by PhysicsManager on collision
+OnCollisionEnter(Collider* other)  →  called by PhysicsManager on collision
 ```
 
 Attach a behavior script to any `Object` like a regular component:

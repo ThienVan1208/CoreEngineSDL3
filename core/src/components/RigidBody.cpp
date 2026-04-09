@@ -19,6 +19,7 @@ void RigidBody::AddForce(Vector2 force)
     acceleration = {force.x / mass, force.y / mass};
     velocity.x += acceleration.x;
     velocity.y += acceleration.y;
+    SDL_Log("Force applied: (%.2f, %.2f) | New velocity: (%.2f, %.2f)", force.x, force.y, velocity.x, velocity.y);
 }
 void RigidBody::AddVelocity(Vector2 deltaVel)
 {

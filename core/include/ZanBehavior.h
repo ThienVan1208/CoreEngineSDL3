@@ -5,6 +5,7 @@
 #include "components/Component.h"
 
 class Object;
+class Collider;
 
 class ZanBehavior : public Component
 {
@@ -26,7 +27,9 @@ public:
     virtual void OnUpdate() {}                      
     virtual void OnDisable() {}                     
     virtual void OnDestroy() {}                     
-    virtual void OnCollisionEnter(Object *other) {} 
+    virtual void OnCollisionEnter(Collider *other) {}
+    virtual void OnCollisionStay(Collider *other) {}
+    virtual void OnCollisionExit(Collider *other) {}
     
     virtual void OnAttached() override;             
     virtual void OnDetached() override;             
