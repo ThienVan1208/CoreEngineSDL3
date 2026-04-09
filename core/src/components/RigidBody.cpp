@@ -2,7 +2,7 @@
 #include "../../include/ObjectManager.h"
 #include "../../include/components/Transform.h"
 
-RigidBody::RigidBody(Object* obj, RigidbodyType type, float mass) : object(obj), velocity{0, 0}, mass{mass}, acceleration{0, 0}, type{type}
+RigidBody::RigidBody(Object* obj, RigidbodyType type, float mass) : object(obj), velocity{0, 0}, mass{mass}, bounciness(0.0f), acceleration{0, 0}, type{type}
 {
     // Need to collect colliders from the object's components array
     for(auto& comp : obj->GetComponents()){

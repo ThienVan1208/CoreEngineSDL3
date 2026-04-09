@@ -12,7 +12,7 @@
 // Forward declaration
 class Object;
 
-static constexpr float GRAVITY = -9.8f; // Units/s² (pixels, Y-up)
+static constexpr float GRAVITY = -980.0f; // Units/s² (pixels, Y-up)
 
 enum RigidbodyType
 {
@@ -26,6 +26,7 @@ class RigidBody : public Component
 private:
     Vector2 velocity;
     float mass;
+    float bounciness;
     Vector2 acceleration;
     std::vector<Collider*> colliders; 
     Object* object; 
@@ -39,10 +40,16 @@ public:
 
     void AddForce(Vector2 force);
     void AddVelocity(Vector2 deltaVel);
+
     void SetVelocity(Vector2 newVel);
     Vector2 GetVelocity() const { return velocity; }
+    
     void SetMass(float newMass) { mass = newMass; }
     float GetMass() const { return mass; }
+
+    void SetBounciness(float newBounciness) { bounciness = newBounciness; }
+    float GetBounciness() const { return bounciness; }
+    
     void OnPhysicsUpdate(float deltaTime);
     Object* GetObject() const { return object; }
     std::vector<Collider*> GetColliders() const { return colliders; }

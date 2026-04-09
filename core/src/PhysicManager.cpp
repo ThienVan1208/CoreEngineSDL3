@@ -48,6 +48,7 @@ void Physic::Update(float deltaTime)
 {
 
     std::vector<Object*> processedObjects; // Track processed objects to avoid duplicate updates
+    spatialHash.Clear();
     
     for (auto collider : colliders)
     {
@@ -61,6 +62,9 @@ void Physic::Update(float deltaTime)
             continue;
         
         processedObjects.push_back(object);
+        
+        // Add to spatial hash for collision detection
+        spatialHash.Insert(collider);
         
         // Find and update RigidBody component
         for (auto& comp : object->GetComponents())
@@ -123,144 +127,125 @@ void Physic::NotifyCollisionExit(Object* collidedObject, Collider* otherCollider
 void Physic::CheckCollisions()
 {
     std::set<std::pair<Collider*, Collider*>> newActiveCollisions;
+    std::set<std::pair<Collider*, Collider*>> checkedPairs;
 
-    for (size_t i = 0; i < colliders.size(); i++)
+    for (auto colliderA : colliders)
     {
-        for (size_t j = i + 1; j < colliders.size(); j++)
+        if (!colliderA) continue;
+        Object* objectA = colliderA->GetObject();
+        if (!objectA) continue;
+
+        auto neighbors = spatialHash.Query(colliderA);
+
+        for (auto colliderB : neighbors)
         {
-            Collider* colliderA = colliders[i];
-            Collider* colliderB = colliders[j];
-            
-            if (!colliderA || !colliderB)
+            if (!colliderB || colliderA == colliderB)
                 continue;
-            
-            Object* objectA = colliderA->GetObject();
+
             Object* objectB = colliderB->GetObject();
-            
-            if (!objectA || !objectB || objectA == objectB)
-                continue;  // Skip if same object or null
-            
+            if (!objectB || objectA == objectB)
+                continue;
+
+            // Ensure we check each pair only once
+            std::pair<Collider*, Collider*> pair = (colliderA < colliderB) ? std::make_pair(colliderA, colliderB) : std::make_pair(colliderB, colliderA);
+            if (checkedPairs.count(pair)) continue;
+            checkedPairs.insert(pair);
+
             // Get detailed collision info
             CollisionInfo collisionInfo = colliderA->GetCollisionInfo(colliderB);
-            
+
             if (collisionInfo.isColliding)
             {
                 // Find RigidBodies on both objects
                 RigidBody* rigidBodyA = nullptr;
                 RigidBody* rigidBodyB = nullptr;
-                
+
                 for (auto& comp : objectA->GetComponents())
                 {
                     rigidBodyA = dynamic_cast<RigidBody*>(comp);
                     if (rigidBodyA) break;
                 }
-                
+
                 for (auto& comp : objectB->GetComponents())
                 {
                     rigidBodyB = dynamic_cast<RigidBody*>(comp);
                     if (rigidBodyB) break;
                 }
-                
+
                 // At least one object must have a rigidbody
                 if (rigidBodyA || rigidBodyB)
                 {
                     // Calculate collision normal (from A to B)
                     Vector2 normal = collisionInfo.normal;
                     float penetration = collisionInfo.penetrationDepth;
-                    
-                    // Separate overlapping objects
-                    float positionCorrectionMagnitude = penetration + 0.01f;  // 0.01f = small bias to prevent sticking
-                    
-                    // SDL_Log("━━━ COLLISION RESPONSE ━━━");
-                    // SDL_Log("Normal: (%.2f, %.2f) | Penetration: %.2f", normal.x, normal.y, penetration);
-                    
-                    float invMassA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyA->GetMass() : 0.0f;
-                    float invMassB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyB->GetMass() : 0.0f;
-                    float sumInvMass = invMassA + invMassB;
-                    
-                    if (sumInvMass > 0.0f)
+
+                    // Separate overlapping objects using SLOP bias
+                    if (penetration > SLOP)
                     {
-                        float pushRatioA = invMassA / sumInvMass;
-                        float pushRatioB = invMassB / sumInvMass;
-                        
-                        if (invMassA > 0.0f)
+                        float positionCorrectionMagnitude = penetration; // Use full penetration if above slop
+
+                        float invMassA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyA->GetMass() : 0.0f;
+                        float invMassB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyB->GetMass() : 0.0f;
+                        float sumInvMass = invMassA + invMassB;
+
+                        if (sumInvMass > 0.0f)
                         {
-                            float pushX = -normal.x * positionCorrectionMagnitude * pushRatioA;
-                            float pushY = -normal.y * positionCorrectionMagnitude * pushRatioA;
-                            objectA->transform->Translate(pushX, pushY);
-                            // SDL_Log("Object A pushed by: (%.2f, %.2f)", pushX, pushY);
-                        }
-                        else if (rigidBodyA)
-                        {
-                            // SDL_Log("Object A: Static (not moved)");
-                        }
-                        
-                        if (invMassB > 0.0f)
-                        {
-                            float pushX = normal.x * positionCorrectionMagnitude * pushRatioB;
-                            float pushY = normal.y * positionCorrectionMagnitude * pushRatioB;
-                            objectB->transform->Translate(pushX, pushY);
-                            // SDL_Log("Object B pushed by: (%.2f, %.2f)", pushX, pushY);
-                        }
-                        else if (rigidBodyB)
-                        {
-                            // SDL_Log("Object B: Static (not moved)");
+                            float pushRatioA = invMassA / sumInvMass;
+                            float pushRatioB = invMassB / sumInvMass;
+
+                            if (invMassA > 0.0f)
+                            {
+                                float pushX = -normal.x * positionCorrectionMagnitude * pushRatioA;
+                                float pushY = -normal.y * positionCorrectionMagnitude * pushRatioA;
+                                objectA->transform->Translate(pushX, pushY);
+                            }
+
+                            if (invMassB > 0.0f)
+                            {
+                                float pushX = normal.x * positionCorrectionMagnitude * pushRatioB;
+                                float pushY = normal.y * positionCorrectionMagnitude * pushRatioB;
+                                objectB->transform->Translate(pushX, pushY);
+                            }
                         }
                     }
-                    
+
                     // Calculate impulse magnitude
-                    // Formula: |J| = -(1 + e) * ((vB - vA) · n) / (1/mA + 1/mB)
-                    // where e = restitution (0 = inelastic, 1 = elastic), n = collision normal
-                    float restitution = 0.5f;  // Bounciness 
-                    
+                    // Get bounciness from each RigidBody, default to 0.0f
+                    float bounceA = rigidBodyA ? rigidBodyA->GetBounciness() : 0.0f;
+                    float bounceB = rigidBodyB ? rigidBodyB->GetBounciness() : 0.0f;
+                    float restitution = std::max(bounceA, bounceB);
+
                     Vector2 velA = rigidBodyA ? rigidBodyA->GetVelocity() : Vector2(0, 0);
                     Vector2 velB = rigidBodyB ? rigidBodyB->GetVelocity() : Vector2(0, 0);
-                    Vector2 relativeVelocity = {velB.x - velA.x, velB.y - velA.y};
-                    
+                    Vector2 relativeVelocity = { velB.x - velA.x, velB.y - velA.y };
+
                     float velAlongNormal = relativeVelocity.x * normal.x + relativeVelocity.y * normal.y;
-                    
+
                     // Only resolve if objects are moving toward each other
                     if (velAlongNormal < 0)
                     {
-                        float massA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? rigidBodyA->GetMass() : 999999.0f;  // Large mass for static
+                        float massA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? rigidBodyA->GetMass() : 999999.0f;
                         float massB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? rigidBodyB->GetMass() : 999999.0f;
-                        
+
                         float impulseScalar = -(1 + restitution) * velAlongNormal / (1.0f / massA + 1.0f / massB);
-                        
-                        Vector2 impulse = {normal.x * impulseScalar, normal.y * impulseScalar};
-                        
-                        // Apply equal and opposite impulses
-                        if (rigidBodyA)
-                        {
-                            rigidBodyA->ApplyImpulse({-impulse.x, -impulse.y});
-                        }
-                        
-                        if (rigidBodyB)
-                        {
-                            rigidBodyB->ApplyImpulse(impulse);
-                        }
+
+                        Vector2 impulse = { normal.x * impulseScalar, normal.y * impulseScalar };
+
+                        if (rigidBodyA) rigidBodyA->ApplyImpulse({ -impulse.x, -impulse.y });
+                        if (rigidBodyB) rigidBodyB->ApplyImpulse(impulse);
                     }
                 }
-                
-                // Track active collisions properly
-                std::pair<Collider*, Collider*> collisionPair;
-                if (colliderA < colliderB)
-                    collisionPair = {colliderA, colliderB};
-                else
-                    collisionPair = {colliderB, colliderA};
-                
-                newActiveCollisions.insert(collisionPair);
-                
+
+                newActiveCollisions.insert(pair);
+
                 // Emitting Correct Callbacks
-                if (activeCollisions.find(collisionPair) == activeCollisions.end())
+                if (activeCollisions.find(pair) == activeCollisions.end())
                 {
-                    // Newly began colliding
                     NotifyCollisionEnter(objectA, colliderB);
                     NotifyCollisionEnter(objectB, colliderA);
                 }
                 else
                 {
-                    // Continue colliding
                     NotifyCollisionStay(objectA, colliderB);
                     NotifyCollisionStay(objectB, colliderA);
                 }
