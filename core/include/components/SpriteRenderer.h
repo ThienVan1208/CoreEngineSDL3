@@ -20,7 +20,7 @@ private:
 
 public:
     SDL_Texture *texture;
-
+    SDL_Color color;
     int layerOrder;
     SpriteRenderer(Transform *trans);
     void LoadTexture(SDL_Renderer *initRenderer, const char *filePath);

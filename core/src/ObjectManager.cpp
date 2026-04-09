@@ -116,13 +116,19 @@ void Object::DetachComponent(Component* component)
 GameObject::GameObject() : Object()
 {
     spriteRenderer = new SpriteRenderer(transform);
+    AttachComponent(spriteRenderer);
 }
 GameObject::GameObject(float x, float y) : Object(x, y)
 {
     spriteRenderer = new SpriteRenderer(transform);
+    AttachComponent(spriteRenderer);
 }
 
 GameObject::GameObject(float x, float y, SpriteRenderer *sprite) : Object(x, y)
 {
     spriteRenderer = sprite;
+    if (spriteRenderer)
+    {
+        AttachComponent(spriteRenderer);
+    }
 }

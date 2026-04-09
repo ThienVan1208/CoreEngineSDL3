@@ -6,6 +6,7 @@
 SpriteRenderer::SpriteRenderer(Transform *trans) : texture(nullptr), transform(trans)
 {
     layerOrder = 0;
+    color = {255, 255, 255, 255}; // Default to white (no tint)
     LoadTexture(Core::renderer, "core/assets/sprites/defaultSquare.png");
     RenderManager::OnRegisterRenderable(this);
 }
@@ -39,6 +40,9 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
     pivot.x = rect.w / 2;
     pivot.y = rect.h / 2;
 
+    SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
+    SDL_SetTextureAlphaMod(texture, color.a);
+
     SDL_RenderTextureRotated(
         renderer, 
         texture, 
@@ -48,6 +52,10 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
         &pivot,            // Rotate around the center
         SDL_FLIP_NONE      // No flipping
     );
+
+    SDL_SetTextureColorMod(texture, 255, 255, 255); // Reset to default
+    SDL_SetTextureAlphaMod(texture, 255);
+
 }
 
 void SpriteRenderer::LoadTexture(SDL_Renderer *initRenderer, const char *filePath)

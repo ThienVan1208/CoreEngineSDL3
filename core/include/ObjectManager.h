@@ -51,6 +51,19 @@ public:
     float GetHeight() const { return rect.h; }
     SDL_FRect GetRect() const { return rect; }
 
+    template<typename T>
+    T* GetComponent() const
+    {
+        for (auto& comp : components)
+        {
+            T* casted = dynamic_cast<T*>(comp);
+            if (casted)
+                return casted;
+        }
+        return nullptr; // Not found
+    }
+
+
     void AttachComponent(Component *component);
     void DetachComponent(Component *component);
     const std::vector<Component *> &GetComponents() const { return components; }
