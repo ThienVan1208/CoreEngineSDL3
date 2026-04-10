@@ -9,7 +9,7 @@ void FPSDebug::Init()
     // Yellow text for debug
     fpsText = std::make_unique<UIText>(50, 50, SDL_Color{255, 255, 0, 255}, "FPS: 0"); 
     lastFpsTime = SDL_GetTicks();
-    fpsText->rectTransform->scale = {3.5f, 3.5f}; // Make it bigger for visibility
+    fpsText->rectTransform->SetScale(3.5f, 3.5f); // Make it bigger for visibility
     frameCount = 0;
 }
 

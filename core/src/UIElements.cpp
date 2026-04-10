@@ -77,8 +77,8 @@ void UIText::Render(SDL_Renderer *renderer)
     float prevScaleX, prevScaleY;
     SDL_GetRenderScale(renderer, &prevScaleX, &prevScaleY);
 
-    float newScaleX = prevScaleX * rectTransform->scale.x;
-    float newScaleY = prevScaleY * rectTransform->scale.y;
+    float newScaleX = prevScaleX * rectTransform->GetScale().x;
+    float newScaleY = prevScaleY * rectTransform->GetScale().y;
 
     // Prevent zero scale
     if (newScaleX <= 0.001f) newScaleX = 0.001f;
@@ -130,7 +130,7 @@ void Image::Render(SDL_Renderer *renderer)
         texture,
         nullptr,                 // Draw the whole texture
         &rect,                   // Apply Transform Position & Scale
-        rectTransform->rotation, // Apply Transform Rotation (in degrees)
+        rectTransform->GetRotation(), // Apply Transform Rotation (in degrees)
         &pivot,                  // Rotate around the center
         SDL_FLIP_NONE            // No flipping
     );

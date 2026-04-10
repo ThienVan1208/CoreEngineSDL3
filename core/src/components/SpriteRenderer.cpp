@@ -19,15 +19,15 @@ SpriteRenderer::~SpriteRenderer()
 
 float SpriteRenderer::GetYSortValue() const
 {
-    return transform ? transform->position.y : 0.0f;
+    return transform ? transform->GetPosition().y : 0.0f;
 }
 
 void SpriteRenderer::Render(SDL_Renderer* renderer)
 {
     if(transform == nullptr || texture == nullptr) return;
 
-    float finalWidth = width * transform->scale.x;
-    float finalHeight = height * transform->scale.y;
+    float finalWidth = width * transform->GetScale().x;
+    float finalHeight = height * transform->GetScale().y;
     Vector2 rectPos = transform->GetSDLPosition(Vector2(finalWidth, finalHeight));
 
     SDL_FRect rect;
@@ -48,7 +48,7 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
         texture, 
         nullptr,           // Draw the whole texture
         &rect,             // Apply Transform Position & Scale
-        transform->rotation,// Apply Transform Rotation (in degrees)
+        transform->GetRotation(),// Apply Transform Rotation (in degrees)
         &pivot,            // Rotate around the center
         SDL_FLIP_NONE      // No flipping
     );

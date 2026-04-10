@@ -19,8 +19,8 @@ void BoxCollider::OnAttached()
     GameObject* go = dynamic_cast<GameObject*>(object);
     if (go && go->spriteRenderer) {
         size = Vector2(
-            go->spriteRenderer->GetWidth() * transform->scale.x, 
-            go->spriteRenderer->GetHeight() * transform->scale.y
+            go->spriteRenderer->GetWidth() * transform->GetScale().x, 
+            go->spriteRenderer->GetHeight() * transform->GetScale().y
         );
     } else {
         size = Vector2(100.0f, 50.0f); // Sensible fallback
@@ -170,9 +170,9 @@ CollisionInfo BoxCollider::GetCollisionInfo(Collider* collider)
 
 Bound BoxCollider::GetBound(){
     Bound bound;
-    bound.left = transform->position.x + offset.x - size.x / 2.0f;
+    bound.left = transform->GetPosition().x + offset.x - size.x / 2.0f;
     bound.right = bound.left + size.x ;
-    bound.top = transform->position.y + offset.y + size.y / 2.0f;
+    bound.top = transform->GetPosition().y + offset.y + size.y / 2.0f;
     bound.bottom = bound.top - size.y;
 
     return bound;
