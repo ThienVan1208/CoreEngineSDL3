@@ -8,40 +8,27 @@
 /*
     OBJECT MANAGER
 */
-std::function<void(Object *)> ObjectManager::OnObjectRegister;
-std::function<void(Object *)> ObjectManager::OnObjectUnregister;
-
-ObjectManager::ObjectManager()
-{
-    // Constructor can be empty or used for initialization if needed
-}
-ObjectManager::~ObjectManager()
-{
-    OnObjectRegister = nullptr;
-    OnObjectUnregister = nullptr;
-}
+ObjectManager::ObjectManager() {}
+ObjectManager::~ObjectManager() {}
 
 void ObjectManager::Init()
 {
-    OnObjectRegister = [this](Object *object)
-    {
-        RegisterObject(object);
-    };
-
-    OnObjectUnregister = [this](Object *object)
-    {
-        UnregisterObject(object);
-    };
 }
 
-void ObjectManager::RegisterObject(Object *object)
+void ObjectManager::RegisterObject(std::unique_ptr<Object> object)
 {
-    objects.push_back(object);
+    if (object) {
+        objects.push_back(std::move(object));
+    }
 }
 
 void ObjectManager::UnregisterObject(Object *object)
 {
-    objects.erase(std::remove(objects.begin(), objects.end(), object), objects.end());
+    auto it = std::remove_if(objects.begin(), objects.end(),
+                             [object](const std::unique_ptr<Object>& ptr) { return ptr.get() == object; });
+    if (it != objects.end()) {
+        objects.erase(it, objects.end());
+    }
 }
 
 void ObjectManager::UpdateObjects()
@@ -58,19 +45,20 @@ void ObjectManager::UpdateObjects()
 */
 Object::Object()
 {
-    transform = new Transform();
+    auto tr = std::make_unique<Transform>();
+    transform = tr.get();
+    AttachComponent(std::move(tr));
     isActive = true;
     rect = {0, 0, 0, 0};
-    if (ObjectManager::OnObjectRegister)
-        ObjectManager::OnObjectRegister(this);
 }
-Object::Object(float x, float y) : transform(new Transform())
+Object::Object(float x, float y)
 {
+    auto tr = std::make_unique<Transform>();
+    transform = tr.get();
+    AttachComponent(std::move(tr));
     transform->SetPosition(x, y);
     rect = {x, y, 0, 0}; // Width and height default to 0
     isActive = true;
-    if (ObjectManager::OnObjectRegister)
-        ObjectManager::OnObjectRegister(this);
 }
 
 bool Object::IsActive() const
@@ -88,26 +76,31 @@ void Object::SetActive(bool active)
         OnDisable();
 }
 
-void Object::AttachComponent(Component* component)
+void Object::AttachComponent(std::unique_ptr<Component> component)
 {
     if (!component) return;
     
     // Set gameObject reference for ZanBehavior components
-    ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(component);
+    ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(component.get());
     if (behavior)
     {
         behavior->SetGameObject(this);
     }
     
     component->OnAttached();
-    components.push_back(component);
+    components.push_back(std::move(component));
 }
 
 void Object::DetachComponent(Component* component)
 {
     if (!component) return;
     component->OnDetached();
-    components.erase(std::remove(components.begin(), components.end(), component), components.end());
+    
+    auto it = std::remove_if(components.begin(), components.end(),
+                             [component](const std::unique_ptr<Component>& ptr) { return ptr.get() == component; });
+    if (it != components.end()) {
+        components.erase(it, components.end());
+    }
 }
 
 /*
@@ -115,20 +108,24 @@ void Object::DetachComponent(Component* component)
 */
 GameObject::GameObject() : Object()
 {
-    spriteRenderer = new SpriteRenderer(transform);
-    AttachComponent(spriteRenderer);
+    auto spr = std::make_unique<SpriteRenderer>(transform);
+    spriteRenderer = spr.get();
+    AttachComponent(std::move(spr));
 }
 GameObject::GameObject(float x, float y) : Object(x, y)
 {
-    spriteRenderer = new SpriteRenderer(transform);
-    AttachComponent(spriteRenderer);
+    auto spr = std::make_unique<SpriteRenderer>(transform);
+    spriteRenderer = spr.get();
+    AttachComponent(std::move(spr));
 }
 
 GameObject::GameObject(float x, float y, SpriteRenderer *sprite) : Object(x, y)
 {
+    // Warning: passing raw pointers to constructors is deprecated in the new memory model
+    // Assuming the user will refactor this constructor out or handle ownership outside.
     spriteRenderer = sprite;
     if (spriteRenderer)
     {
-        AttachComponent(spriteRenderer);
+        // Notice: This is unsafe if the raw pointer is not wrapped.
     }
 }

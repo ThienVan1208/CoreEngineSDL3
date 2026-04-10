@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 #include "components/Component.h"
 
 class Transform;
@@ -15,18 +16,25 @@ class ZanBehavior;
 class ObjectManager
 {
 private:
-    std::vector<Object *> objects;
-    void RegisterObject(Object *object);
-    void UnregisterObject(Object *object);
+    std::vector<std::unique_ptr<Object>> objects;
+    void RegisterObject(std::unique_ptr<Object> object);
+    void UnregisterObject(Object *object); // Raw pointer for lookup
 
 public:
-    static std::function<void(Object *)> OnObjectRegister;
-    static std::function<void(Object *)> OnObjectUnregister;
     void Init();
     void UpdateObjects();
     ObjectManager();
     ~ObjectManager();
-    const std::vector<Object *> &GetObjects() const { return objects; }
+    const std::vector<std::unique_ptr<Object>> &GetObjects() const { return objects; }
+    
+    // Helper template to cleanly register dynamically created objects
+    template<typename T, typename... Args>
+    T* CreateObject(Args&&... args) {
+        auto obj = std::make_unique<T>(std::forward<Args>(args)...);
+        T* raw_ptr = obj.get();
+        RegisterObject(std::move(obj));
+        return raw_ptr;
+    }
 };
 
 class Object
@@ -34,7 +42,7 @@ class Object
 private:
     bool isActive;
     SDL_FRect rect;
-    std::vector<Component *> components; // All components attached to this object
+    std::vector<std::unique_ptr<Component>> components; // Ownership of components
 public:
     Transform *transform;
     Object();
@@ -54,9 +62,9 @@ public:
     template<typename T>
     T* GetComponent() const
     {
-        for (auto& comp : components)
+        for (const auto& comp : components)
         {
-            T* casted = dynamic_cast<T*>(comp);
+            T* casted = dynamic_cast<T*>(comp.get());
             if (casted)
                 return casted;
         }
@@ -64,9 +72,9 @@ public:
     }
 
 
-    void AttachComponent(Component *component);
+    void AttachComponent(std::unique_ptr<Component> component);
     void DetachComponent(Component *component);
-    const std::vector<Component *> &GetComponents() const { return components; }
+    const std::vector<std::unique_ptr<Component>> &GetComponents() const { return components; }
 };
 
 class GameObject : public Object

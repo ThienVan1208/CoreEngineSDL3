@@ -5,8 +5,9 @@
 RigidBody::RigidBody(Object* obj, RigidbodyType type, float mass) : object(obj), velocity{0, 0}, mass{mass}, bounciness(0.0f), acceleration{0, 0}, type{type}
 {
     // Need to collect colliders from the object's components array
-    for(auto& comp : obj->GetComponents()){
-        Collider* collider = dynamic_cast<Collider*>(comp);
+    for (auto& comp : obj->GetComponents())
+    {
+        Collider* collider = dynamic_cast<Collider*>(comp.get());
         if(collider){
             colliders.push_back(collider);
         }

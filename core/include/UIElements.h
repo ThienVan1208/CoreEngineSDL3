@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "components/Component.h"
 #include "components/IRenderable.h"
+#include <memory>
 #include "components/RectTransform.h"
 #include "setting/Setting.h"
 
@@ -17,7 +18,7 @@ class UIElement : public IRenderable
 {
 public:
     int orderLayer;
-    RectTransform* rectTransform;
+    std::shared_ptr<RectTransform> rectTransform;
     bool isActive;
     
     UIElement();
@@ -66,8 +67,8 @@ private:
     std::vector<std::function<void()>*> onClick;
 
 public:
-    UIText* text;
-    Image* image;
+    std::unique_ptr<UIText> text;
+    std::unique_ptr<Image> image;
     
     UIButton();
     UIButton(float x, float y, std::string txt);

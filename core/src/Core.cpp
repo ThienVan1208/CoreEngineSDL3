@@ -6,15 +6,15 @@
 #include "../include/PhysicManager.h"
 
 SDL_Renderer *Core::renderer = nullptr;
-Physic *Core::physicsManager = nullptr;
+std::unique_ptr<Physic> Core::physicsManager = nullptr;
 
 Core::Core()
 {
-    renderManager = new RenderManager();
-    objectManager = new ObjectManager();
-    behaviorManager = new BehaviorManager();
-    input = new Input();
-    physicsManager = new Physic();
+    renderManager = std::make_unique<RenderManager>();
+    objectManager = std::make_unique<ObjectManager>();
+    behaviorManager = std::make_unique<BehaviorManager>();
+    input = std::make_unique<Input>();
+    physicsManager = std::make_unique<Physic>();
 
     renderManager->Init();
     objectManager->Init();
@@ -24,11 +24,11 @@ Core::Core()
 Core::Core(SDL_Renderer *rend)
 {
     renderer = rend;
-    renderManager = new RenderManager();
-    objectManager = new ObjectManager();
-    behaviorManager = new BehaviorManager();
-    input = new Input();
-    physicsManager = new Physic();
+    renderManager = std::make_unique<RenderManager>();
+    objectManager = std::make_unique<ObjectManager>();
+    behaviorManager = std::make_unique<BehaviorManager>();
+    input = std::make_unique<Input>();
+    physicsManager = std::make_unique<Physic>();
 
     renderManager->Init();
     objectManager->Init();
@@ -38,11 +38,7 @@ Core::Core(SDL_Renderer *rend)
 
 Core::~Core()
 {
-    delete renderManager;
-    delete objectManager;
-    delete behaviorManager;
-    delete input;
-    delete physicsManager;
+    // unique_ptr automatically cleans up memory
 }
 void Core::OnUpdate()
 {

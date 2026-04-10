@@ -69,7 +69,7 @@ void Physic::Update(float deltaTime)
         // Find and update RigidBody component
         for (auto& comp : object->GetComponents())
         {
-            RigidBody* rigidBody = dynamic_cast<RigidBody*>(comp);
+            RigidBody* rigidBody = dynamic_cast<RigidBody*>(comp.get());
             if (rigidBody)
             {
                 rigidBody->OnPhysicsUpdate(deltaTime);
@@ -86,7 +86,7 @@ void Physic::NotifyCollisionEnter(Object* collidedObject, Collider* otherCollide
     
     for (auto& comp : collidedObject->GetComponents())
     {
-        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
+        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp.get());
         if (behavior)
         {
             behavior->OnCollisionEnter(otherCollider);
@@ -101,7 +101,7 @@ void Physic::NotifyCollisionStay(Object* collidedObject, Collider* otherCollider
     
     for (auto& comp : collidedObject->GetComponents())
     {
-        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
+        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp.get());
         if (behavior)
         {
             behavior->OnCollisionStay(otherCollider);
@@ -116,7 +116,7 @@ void Physic::NotifyCollisionExit(Object* collidedObject, Collider* otherCollider
     
     for (auto& comp : collidedObject->GetComponents())
     {
-        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp);
+        ZanBehavior* behavior = dynamic_cast<ZanBehavior*>(comp.get());
         if (behavior)
         {
             behavior->OnCollisionExit(otherCollider);
@@ -162,13 +162,13 @@ void Physic::CheckCollisions()
 
                 for (auto& comp : objectA->GetComponents())
                 {
-                    rigidBodyA = dynamic_cast<RigidBody*>(comp);
+                    rigidBodyA = dynamic_cast<RigidBody*>(comp.get());
                     if (rigidBodyA) break;
                 }
 
                 for (auto& comp : objectB->GetComponents())
                 {
-                    rigidBodyB = dynamic_cast<RigidBody*>(comp);
+                    rigidBodyB = dynamic_cast<RigidBody*>(comp.get());
                     if (rigidBodyB) break;
                 }
 

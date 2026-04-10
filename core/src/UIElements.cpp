@@ -10,7 +10,7 @@
 
 UIElement::UIElement()
 {
-    rectTransform = new RectTransform();
+    rectTransform = std::make_shared<RectTransform>();
     orderLayer = 0;
     isActive = true;
     RenderManager::OnRegisterRenderable(this);
@@ -18,7 +18,7 @@ UIElement::UIElement()
 
 UIElement::UIElement(float x, float y)
 {
-    rectTransform = new RectTransform();
+    rectTransform = std::make_shared<RectTransform>();
 
     rectTransform->SetPosition(x, y);
 
@@ -29,7 +29,6 @@ UIElement::UIElement(float x, float y)
 UIElement::~UIElement()
 {
     RenderManager::OnUnregisterRenderable(this);
-    delete rectTransform;
 }
 
 void UIElement::Render(SDL_Renderer *renderer)
@@ -124,34 +123,28 @@ void Image::Render(SDL_Renderer *renderer)
 ***********************************/
 UIButton::UIButton() : UIElement(0, 0)
 {
-    image = new Image();
-    text = new UIText("New Button");
-
-    delete image->rectTransform;
-    delete text->rectTransform;
+    image = std::make_unique<Image>();
+    text = std::make_unique<UIText>("New Button");
 
     text->rectTransform = this->rectTransform;
     image->rectTransform = this->rectTransform;
 
-    RenderManager::OnUnregisterRenderable(image);
-    RenderManager::OnUnregisterRenderable(text);
+    RenderManager::OnUnregisterRenderable(image.get());
+    RenderManager::OnUnregisterRenderable(text.get());
 }
 
 // The constructor that actually sets the size!
 UIButton::UIButton(float x, float y, std::string txt)
     : UIElement(x, y) 
 {
-    image = new Image();
-    text = new UIText(txt);
-
-    delete image->rectTransform;
-    delete text->rectTransform;
+    image = std::make_unique<Image>();
+    text = std::make_unique<UIText>(txt);
 
     image->rectTransform = this->rectTransform;
     text->rectTransform = this->rectTransform;
 
-    RenderManager::OnUnregisterRenderable(image);
-    RenderManager::OnUnregisterRenderable(text);
+    RenderManager::OnUnregisterRenderable(image.get());
+    RenderManager::OnUnregisterRenderable(text.get());
 }
 
 void UIButton::Render(SDL_Renderer *renderer)
