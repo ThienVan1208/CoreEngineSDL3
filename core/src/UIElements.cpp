@@ -73,8 +73,26 @@ void UIText::Render(SDL_Renderer *renderer)
     
     SDL_FRect rect = rectTransform->CalculateRect(Screen::GetWidth(), Screen::GetHeight());
 
+    // Apply scale to the text by scaling the SDL renderer
+    float prevScaleX, prevScaleY;
+    SDL_GetRenderScale(renderer, &prevScaleX, &prevScaleY);
+
+    float newScaleX = prevScaleX * rectTransform->scale.x;
+    float newScaleY = prevScaleY * rectTransform->scale.y;
+
+    // Prevent zero scale
+    if (newScaleX <= 0.001f) newScaleX = 0.001f;
+    if (newScaleY <= 0.001f) newScaleY = 0.001f;
+
+    SDL_SetRenderScale(renderer, newScaleX, newScaleY);
+
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderDebugText(renderer, rect.x, rect.y, text.c_str());
+    
+    // Divide target position by newScale so it correctly places the text at the logical x, y
+    SDL_RenderDebugText(renderer, rect.x / newScaleX, rect.y / newScaleY, text.c_str());
+
+    // Restore previous scale
+    SDL_SetRenderScale(renderer, prevScaleX, prevScaleY);
 }
 
 /*

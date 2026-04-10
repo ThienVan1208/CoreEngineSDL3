@@ -44,11 +44,8 @@ SDL_FRect RectTransform::CalculateRect(float parentWidth, float parentHeight)
     rect.x = pivotUiPosX - size.x * pivot.x;
     rect.y = pivotUiPosY - size.y * pivot.y;
 
-    size.x *= scale.x;
-    size.y *= scale.y;
-
-    rect.w = size.x;
-    rect.h = size.y;
+    rect.w = size.x * scale.x;
+    rect.h = size.y * scale.y;
 
     position.x = rect.x;
     position.y = rect.y;
