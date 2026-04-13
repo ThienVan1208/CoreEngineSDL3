@@ -45,6 +45,9 @@ void ObjectManager::UpdateObjects()
 */
 Object::Object()
 {
+    name = "New Object";
+    tag = "Default";
+    layer = 0;
     auto tr = std::make_unique<Transform>();
     transform = tr.get();
     AttachComponent(std::move(tr));
@@ -53,6 +56,9 @@ Object::Object()
 }
 Object::Object(float x, float y)
 {
+    name = "New Object";
+    tag = "Default";
+    layer = 0;
     auto tr = std::make_unique<Transform>();
     transform = tr.get();
     AttachComponent(std::move(tr));

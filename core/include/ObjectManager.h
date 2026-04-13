@@ -45,6 +45,9 @@ private:
     std::vector<std::unique_ptr<Component>> components; // Ownership of components
 public:
     Transform *transform;
+    std::string name;
+    std::string tag;
+    int layer;
     Object();
     Object(float x, float y);
     virtual ~Object() = default;

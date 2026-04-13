@@ -3,13 +3,14 @@
 #include "../../include/Core.h"
 #include "../../include/ObjectManager.h"
 #include "../../include/components/SpriteRenderer.h"
+#include "../../include/setting/Setting.h"
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
 
 BoxCollider::BoxCollider(Object* obj, Transform *transform) : Collider(obj), transform(transform)
 {
-    size = Vector2(50.0f, 50.0f); // Default value, will be updated in OnAttached
+    size = Vector2(1.0f, 1.0f); // Default value 1 unit
     offset = Vector2(0.0f, 0.0f);
 }
 
@@ -19,11 +20,11 @@ void BoxCollider::OnAttached()
     GameObject* go = dynamic_cast<GameObject*>(object);
     if (go && go->spriteRenderer) {
         size = Vector2(
-            go->spriteRenderer->GetWidth() * transform->GetScale().x, 
-            go->spriteRenderer->GetHeight() * transform->GetScale().y
+            (go->spriteRenderer->GetWidth() * std::abs(transform->GetScale().x)) / Setting::BASE_UNIT, 
+            (go->spriteRenderer->GetHeight() * std::abs(transform->GetScale().y)) / Setting::BASE_UNIT
         );
     } else {
-        size = Vector2(100.0f, 50.0f); // Sensible fallback
+        size = Vector2(2.0f, 1.0f); // Sensible fallback in units (100x50 pixels)
     }
 
     if (Core::physicsManager)
@@ -188,8 +189,8 @@ void BoxCollider::Render(SDL_Renderer* renderer)
     SDL_FRect rect;
     rect.x = sdlTopLeft.x;
     rect.y = sdlTopLeft.y;
-    rect.w = b.right - b.left;
-    rect.h = b.top - b.bottom; // Zenith rect height
+    rect.w = (b.right - b.left) * Setting::BASE_UNIT;
+    rect.h = (b.top - b.bottom) * Setting::BASE_UNIT; // Zenith rect height
     
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color for debug outlines
     SDL_RenderRect(renderer, &rect);

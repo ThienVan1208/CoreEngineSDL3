@@ -1,12 +1,13 @@
 #include "CoordinateDebug.h"
 #include "../include/Screen.h"
+#include "../include/setting/Setting.h"
 #include <cmath>
 
 // Initialize static members
 bool CoordinateDebug::drawZanGrid = true;
 bool CoordinateDebug::drawSDLGrid = true;
 bool CoordinateDebug::drawOrigins = true;
-float CoordinateDebug::gridSpacing = 50.0f;
+float CoordinateDebug::gridSpacing = Setting::BASE_UNIT;
 
 SDL_Color CoordinateDebug::zanGridColor = {0, 255, 255, 200};        // Cyan
 SDL_Color CoordinateDebug::zanOriginColor = {0, 255, 0, 255};        // Green

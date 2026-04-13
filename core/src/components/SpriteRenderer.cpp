@@ -26,8 +26,8 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
 {
     if(transform == nullptr || texture == nullptr) return;
 
-    float finalWidth = width * transform->GetScale().x;
-    float finalHeight = height * transform->GetScale().y;
+    float finalWidth = width * std::abs(transform->GetScale().x);
+    float finalHeight = height * std::abs(transform->GetScale().y);
     Vector2 rectPos = transform->GetSDLPosition(Vector2(finalWidth, finalHeight));
 
     SDL_FRect rect;
@@ -43,6 +43,10 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
     SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
     SDL_SetTextureAlphaMod(texture, color.a);
 
+    int flip = SDL_FLIP_NONE;
+    if (transform->GetScale().x < 0) flip |= SDL_FLIP_HORIZONTAL;
+    if (transform->GetScale().y < 0) flip |= SDL_FLIP_VERTICAL;
+
     SDL_RenderTextureRotated(
         renderer, 
         texture, 
@@ -50,7 +54,7 @@ void SpriteRenderer::Render(SDL_Renderer* renderer)
         &rect,             // Apply Transform Position & Scale
         transform->GetRotation(),// Apply Transform Rotation (in degrees)
         &pivot,            // Rotate around the center
-        SDL_FLIP_NONE      // No flipping
+        (SDL_FlipMode)flip // Apply flipping
     );
 
     SDL_SetTextureColorMod(texture, 255, 255, 255); // Reset to default
