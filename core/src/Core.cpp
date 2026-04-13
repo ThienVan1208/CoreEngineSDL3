@@ -7,6 +7,7 @@
 
 SDL_Renderer *Core::renderer = nullptr;
 std::unique_ptr<Physic> Core::physicsManager = nullptr;
+std::unique_ptr<ObjectManager> Core::objectManager = nullptr;
 
 Core::Core()
 {

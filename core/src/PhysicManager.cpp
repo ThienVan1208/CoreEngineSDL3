@@ -6,6 +6,7 @@
 #include "../include/components/Transform.h"
 #include "../include/ZanBehavior.h"
 #include <algorithm>
+#include <unordered_set>
 
 std::function<void(Collider *)> Physic::OnColliderRegister;
 std::function<void(Collider *)> Physic::OnColliderUnregister;
@@ -47,7 +48,7 @@ void Physic::UnregisterCollider(Collider *collider)
 void Physic::Update(float deltaTime)
 {
 
-    std::vector<Object*> processedObjects; // Track processed objects to avoid duplicate updates
+    std::unordered_set<Object*> processedObjects; // Track processed objects to avoid duplicate updates
     spatialHash.Clear();
     
     for (auto collider : colliders)
@@ -58,10 +59,8 @@ void Physic::Update(float deltaTime)
         if (!object) continue;
         
         
-        if (std::find(processedObjects.begin(), processedObjects.end(), object) != processedObjects.end())
+        if (!processedObjects.insert(object).second)
             continue;
-        
-        processedObjects.push_back(object);
         
         // Add to spatial hash for collision detection
         spatialHash.Insert(collider);
