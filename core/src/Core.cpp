@@ -4,6 +4,7 @@
 #include "../include/BehaviorManager.h"
 #include "../include/Input.h"
 #include "../include/PhysicManager.h"
+#include "../include/Time.h"
 
 SDL_Renderer *Core::renderer = nullptr;
 std::unique_ptr<Physic> Core::physicsManager = nullptr;
@@ -47,7 +48,7 @@ void Core::OnUpdate()
     behaviorManager->UpdateBehaviors();
     if (physicsManager)
     {
-        physicsManager->Update(1.0f / 60.0f); // 60 FPS physics update
+        physicsManager->Update(Time::deltaTime); // Dynamic physics update
         physicsManager->CheckCollisions();
     }
 
