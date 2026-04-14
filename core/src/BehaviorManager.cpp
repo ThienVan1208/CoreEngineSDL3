@@ -30,8 +30,11 @@ void BehaviorManager::Init()
 
 void BehaviorManager::UpdateBehaviors()
 {
-    for(auto& behavior : behaviors)
+    // Use index iteration to avoid invalidating iterators if behaviors are added during OnStart()
+    for(size_t i = 0; i < behaviors.size(); ++i)
     {
+        auto behavior = behaviors[i];
+
         if (!behavior->GetGameObject())
             continue;
 

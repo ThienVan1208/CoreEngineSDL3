@@ -80,11 +80,11 @@ CollisionInfo BoxCollider::GetCollisionInfo(Collider* collider)
     float minHorizontal = FLT_MAX;
     Vector2 horizontalNormal(0, 0);
     
-    if (overlapLeft > 0 && overlapLeft < minHorizontal) {
+    if (overlapLeft >= 0 && overlapLeft < minHorizontal) {
         minHorizontal = overlapLeft;
         horizontalNormal = Vector2(1, 0); 
     }
-    if (overlapRight > 0 && overlapRight < minHorizontal) {
+    if (overlapRight >= 0 && overlapRight < minHorizontal) {
         minHorizontal = overlapRight;
         horizontalNormal = Vector2(-1, 0);
     }
@@ -92,78 +92,25 @@ CollisionInfo BoxCollider::GetCollisionInfo(Collider* collider)
     float minVertical = FLT_MAX;
     Vector2 verticalNormal(0, 0);
     
-    if (overlapTop > 0 && overlapTop < minVertical) {
+    if (overlapTop >= 0 && overlapTop < minVertical) {
         minVertical = overlapTop;
         verticalNormal = Vector2(0, 1);
     }
-    if (overlapBottom > 0 && overlapBottom < minVertical) {
+    if (overlapBottom >= 0 && overlapBottom < minVertical) {
         minVertical = overlapBottom;
         verticalNormal = Vector2(0, -1);
     }
     
-    float penetrationRatio = 2.0f;
-    
-    bool preferHorizontal = false;
-    bool preferVertical = false;
-    
-    if (minHorizontal < FLT_MAX && minVertical < FLT_MAX)
-    {
-        if (minHorizontal <= minVertical / penetrationRatio)
-        {
-            preferHorizontal = true; 
-        }
-        else if (minVertical <= minHorizontal / penetrationRatio)
-        {
-            preferVertical = true;
-        }
-        else
-        {
-            float threshold = 8.0f;
-            if (std::abs(minHorizontal - minVertical) <= threshold)
-            {
-                info.normal = Vector2(horizontalNormal.x, verticalNormal.y);
-                info.penetrationDepth = std::min(std::max(minHorizontal, minVertical), maxPenetration);
-                
-                float length = std::sqrt(info.normal.x * info.normal.x + info.normal.y * info.normal.y);
-                if (length > 0)
-                {
-                    info.normal.x /= length;
-                    info.normal.y /= length;
-                }
-            }
-            else
-            {
-                if (minHorizontal < minVertical) {
-                    preferHorizontal = true;
-                } else {
-                    preferVertical = true;
-                }
-            }
-        }
-    }
-    else if (minHorizontal < FLT_MAX)
-    {
-        preferHorizontal = true;
-    }
-    else if (minVertical < FLT_MAX)
-    {
-        preferVertical = true;
-    }
-    
-    if (preferHorizontal)
+    // Strict AABB resolution: always resolve along the axis of minimum penetration
+    if (minHorizontal < minVertical)
     {
         info.penetrationDepth = std::min(minHorizontal, maxPenetration);
         info.normal = horizontalNormal;
     }
-    else if (preferVertical)
+    else
     {
         info.penetrationDepth = std::min(minVertical, maxPenetration);
         info.normal = verticalNormal;
-    }
-    else
-    {
-        info.penetrationDepth = 0.1f;
-        info.normal = Vector2(0, 0);
     }
     
     return info;

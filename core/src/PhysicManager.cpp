@@ -181,7 +181,9 @@ void Physic::CheckCollisions()
                     // Separate overlapping objects using SLOP bias
                     if (penetration > SLOP)
                     {
-                        float positionCorrectionMagnitude = penetration; // Use full penetration if above slop
+                        // Use a percentage of the penetration (Linear Projection) to prevent jitter
+                        const float percent = 0.8f; // Penetration percentage to correct
+                        float positionCorrectionMagnitude = (penetration - SLOP) * percent;
 
                         float invMassA = (rigidBodyA && rigidBodyA->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyA->GetMass() : 0.0f;
                         float invMassB = (rigidBodyB && rigidBodyB->type == RigidbodyType::Dynamic) ? 1.0f / rigidBodyB->GetMass() : 0.0f;

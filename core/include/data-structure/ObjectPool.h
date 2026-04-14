@@ -2,7 +2,8 @@
 #define OBJECTPOOL_H
 
 #include <queue>
-#include <memory>
+#include <functional>
+#include "IPoolable.h"
 
 class Object;
 
@@ -10,20 +11,32 @@ template <typename T>
 class ObjectPool
 {
 private:
-    Object *prefab;
-    std::queue<std::unique_ptr<T>> pool;
-    int initialSize;
+    std::queue<T*> pool;
+    std::function<T*()> createFunc;
+    std::function<void(T*)> actionOnGet;
+    std::function<void(T*)> actionOnRelease;
+    std::function<void(T*)> actionOnDestroy;
 
 public:
-    ObjectPool() : prefab(nullptr), initialSize(0) {}
-    ObjectPool(Object *prefab, int initialSize = 10) : prefab(prefab), initialSize(initialSize)
+    ObjectPool() {}
+
+    // Mimic Unity's ObjectPool with actions
+    ObjectPool(std::function<T*()> createFunc, 
+               std::function<void(T*)> actionOnGet = nullptr, 
+               std::function<void(T*)> actionOnRelease = nullptr, 
+               std::function<void(T*)> actionOnDestroy = nullptr, 
+               int initialSize = 10) 
+        : createFunc(createFunc), actionOnGet(actionOnGet), 
+          actionOnRelease(actionOnRelease), actionOnDestroy(actionOnDestroy)
     {
-        pool = std::queue<std::unique_ptr<T>>();
         for (int i = 0; i < initialSize; ++i)
         {
-            auto obj = std::make_unique<T>();
-            // obj->SetActive(false);
-            pool.push(std::move(obj));
+            T* obj = createFunc();
+            if (obj)
+            {
+                if (actionOnRelease) actionOnRelease(obj); // Initialize state as released
+                pool.push(obj);
+            }
         }
     }
     
@@ -31,30 +44,40 @@ public:
     {
         while (!pool.empty())
         {
+            if (actionOnDestroy) actionOnDestroy(pool.front());
             pool.pop();
         }
     }
     
     T *GetObject()
     {
+        T* obj = nullptr;
         if (pool.empty())
         {
-            return nullptr;
+            if (createFunc) 
+            {
+                obj = createFunc(); // Dynamically grow if empty
+            }
         }
         else
         {
-            std::unique_ptr<T> obj = std::move(pool.front());
+            obj = pool.front();
             pool.pop();
-            return obj.release();
         }
+        
+        if (obj && actionOnGet)
+        {
+            actionOnGet(obj);
+        }
+        return obj;
     }
     
     void ReturnPool(T *obj)
     {
         if (obj)
         {
-            // obj->SetActive(false);
-            pool.push(std::unique_ptr<T>(obj));
+            if (actionOnRelease) actionOnRelease(obj);
+            pool.push(obj);
         }
     }
 };
